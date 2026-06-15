@@ -6,13 +6,13 @@ import com.example.issuetracker.auth.AuthDtos.RegisterRequest;
 import com.example.issuetracker.auth.AuthDtos.TokenResponse;
 import com.example.issuetracker.auth.AuthDtos.UserProfile;
 import com.example.issuetracker.common.BusinessException;
-import com.example.issuetracker.domain.Permission;
 import com.example.issuetracker.domain.Role;
 import com.example.issuetracker.domain.User;
 import com.example.issuetracker.repository.RoleRepository;
 import com.example.issuetracker.repository.UserRepository;
 import com.example.issuetracker.security.CurrentUser;
 import com.example.issuetracker.security.JwtService;
+import com.example.issuetracker.security.PermissionClaims;
 import com.example.issuetracker.project.DefaultProjectMembershipService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -117,12 +117,7 @@ public class AuthService {
                 user.getEmail(),
                 user.getDisplayName(),
                 user.getRoles().stream().map(Role::getCode).sorted().toList(),
-                user.getRoles().stream()
-                        .flatMap(role -> role.getPermissions().stream())
-                        .map(Permission::getCode)
-                        .distinct()
-                        .sorted()
-                        .toList()
+                PermissionClaims.permissionsFor(user)
         );
     }
 }

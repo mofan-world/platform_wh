@@ -1,7 +1,6 @@
 package com.example.issuetracker.security;
 
 import com.example.issuetracker.config.AppProperties;
-import com.example.issuetracker.domain.Permission;
 import com.example.issuetracker.domain.Role;
 import com.example.issuetracker.domain.User;
 import lombok.RequiredArgsConstructor;
@@ -26,12 +25,7 @@ public class JwtService {
         Instant issuedAt = Instant.now();
         Instant expiresAt = issuedAt.plus(properties.jwt().accessTokenTtl());
         List<String> roles = user.getRoles().stream().map(Role::getCode).sorted().toList();
-        List<String> permissions = user.getRoles().stream()
-                .flatMap(role -> role.getPermissions().stream())
-                .map(Permission::getCode)
-                .distinct()
-                .sorted()
-                .toList();
+        List<String> permissions = PermissionClaims.permissionsFor(user);
         JwtClaimsSet claims = JwtClaimsSet.builder()
                 .issuer(properties.jwt().issuer())
                 .issuedAt(issuedAt)

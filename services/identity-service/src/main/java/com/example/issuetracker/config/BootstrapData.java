@@ -29,6 +29,7 @@ public class BootstrapData implements ApplicationRunner {
     public void run(ApplicationArguments args) {
         String username = properties.bootstrap().adminUsername().toLowerCase(Locale.ROOT);
         if (userRepository.existsByUsernameIgnoreCase(username)) {
+            ensureTravelAdminRoleForPlatformAdmins();
             return;
         }
         Role adminRole = roleRepository.findByCode("ADMIN")
@@ -40,8 +41,24 @@ public class BootstrapData implements ApplicationRunner {
         admin.setPasswordHash(passwordEncoder.encode(properties.bootstrap().adminPassword()));
         admin.setEnabled(true);
         admin.getRoles().add(adminRole);
+        roleRepository.findByCode("TRAVEL_ADMIN").ifPresent(admin.getRoles()::add);
         userRepository.save(admin);
         defaultProjectMembershipService.addToDefaultProject(admin);
+        ensureTravelAdminRoleForPlatformAdmins();
+    }
+
+    private void ensureTravelAdminRoleForPlatformAdmins() {
+        roleRepository.findByCode("TRAVEL_ADMIN").ifPresent(travelAdminRole ->
+                userRepository.findAll().stream()
+                        .filter(user -> !user.isDeleted() && user.isEnabled())
+                        .filter(user -> user.getRoles().stream()
+                                .map(Role::getCode)
+                                .anyMatch(role -> "ADMIN".equals(role) || "MANAGER".equals(role)))
+                        .filter(user -> user.getRoles().stream()
+                                .map(Role::getCode)
+                                .noneMatch("TRAVEL_ADMIN"::equals))
+                        .forEach(user -> user.getRoles().add(travelAdminRole))
+        );
     }
 }
 

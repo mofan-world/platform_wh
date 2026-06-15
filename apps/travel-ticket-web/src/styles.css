@@ -118,6 +118,11 @@ label {
   background: rgba(255, 255, 255, 0.12);
 }
 
+.language-select option {
+  color: var(--ink);
+  background: #fff;
+}
+
 .sr-only {
   position: absolute;
   width: 1px;

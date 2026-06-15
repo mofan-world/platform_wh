@@ -878,7 +878,7 @@ createApp({
         headers,
         body: options.body ? JSON.stringify(options.body) : undefined,
       });
-      if (response.status === 401 && !options.retried && await refreshPlatformSession()) {
+      if ((response.status === 401 || response.status === 403) && !options.retried && await refreshPlatformSession()) {
         return api(path, { ...options, retried: true });
       }
       const payload = await response.json().catch(() => null);
