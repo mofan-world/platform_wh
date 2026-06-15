@@ -1,10 +1,10 @@
 <script setup lang="ts">
 import { computed, onMounted, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { Tickets, Plus, User, SwitchButton, Collection, FolderOpened } from '@element-plus/icons-vue'
+import { Tickets, Plus, User, SwitchButton, Collection, FolderOpened, Fold, Expand } from '@element-plus/icons-vue'
 import { useAuthStore } from '@/stores/auth'
 import { useProjectStore } from '@/stores/project'
-import { useAppI18n } from '@/i18n'
+import { setAppLocale, useAppI18n } from '@/i18n'
 
 const route = useRoute()
 const router = useRouter()
@@ -20,6 +20,11 @@ interface WorkspaceTab {
 
 const tabs = ref<WorkspaceTab[]>([])
 const activeTab = ref(route.fullPath)
+const sidebarCollapsed = ref(localStorage.getItem('platform-sidebar-collapsed') === 'true')
+
+const activeSystem = computed(() => route.path.startsWith('/admin/users') ? 'identity' : 'issue')
+const activeSystemTitle = computed(() => activeSystem.value === 'identity' ? t('platform.identity') : t('platform.issue'))
+const userRoles = computed(() => auth.user?.roles?.join(' / ') || t('platform.userRoles'))
 
 const activeMenu = computed(() => {
   if (route.path.startsWith('/admin/projects')) return '/admin/projects'
@@ -63,6 +68,15 @@ async function logout() {
   await router.replace('/login')
 }
 
+function toggleSidebar() {
+  sidebarCollapsed.value = !sidebarCollapsed.value
+  localStorage.setItem('platform-sidebar-collapsed', String(sidebarCollapsed.value))
+}
+
+function switchLanguage() {
+  setAppLocale(locale.value === 'en' ? 'zh-CN' : 'en')
+}
+
 async function changeProject(projectId: number) {
   projects.setCurrentProject(projectId)
   if (route.path !== '/tickets') await router.push('/tickets')
@@ -72,24 +86,46 @@ onMounted(() => projects.loadProjects())
 </script>
 
 <template>
-  <div class="app-shell">
+  <div class="app-shell" :class="{ 'sidebar-collapsed': sidebarCollapsed }">
+    <header class="platform-topbar">
+      <div class="platform-brand">
+        <span class="platform-logo">UP</span>
+        <strong>{{ t('platform.title') }}</strong>
+      </div>
+      <nav class="system-switcher" :aria-label="t('platform.switchSystem')">
+        <router-link :class="{ active: activeSystem === 'issue' }" to="/tickets">{{ t('platform.issue') }}</router-link>
+        <a href="/travel/">{{ t('platform.travel') }}</a>
+        <router-link
+          v-if="auth.hasPermission('user:manage')"
+          :class="{ active: activeSystem === 'identity' }"
+          to="/admin/users"
+        >
+          {{ t('platform.identity') }}
+        </router-link>
+      </nav>
+      <div class="platform-user">
+        <el-button text class="language-toggle" @click="switchLanguage">{{ t('app.language') }}</el-button>
+        <span class="online-dot"></span>
+        <el-avatar :size="30">{{ auth.user?.displayName?.slice(0, 1) }}</el-avatar>
+        <div class="platform-user-info">
+          <strong>{{ auth.user?.displayName }}</strong>
+          <span>{{ userRoles }}</span>
+        </div>
+        <el-button :icon="SwitchButton" circle text :title="t('app.logout')" @click="logout" />
+      </div>
+    </header>
+
     <aside class="sidebar">
       <div class="brand">
         <div class="brand-mark">IT</div>
         <div>
-          <strong>{{ t('app.center') }}</strong>
-          <span>Issue Tracker</span>
+          <strong>{{ activeSystemTitle }}</strong>
+          <span>{{ t('platform.currentSystem') }}</span>
         </div>
       </div>
 
-      <div class="platform-switcher">
-        <span>统一平台</span>
-        <router-link class="active" to="/tickets">问题跟踪</router-link>
-        <a href="/travel/">出差车票</a>
-        <router-link v-if="auth.hasPermission('user:manage')" to="/admin/users">身份认证</router-link>
-      </div>
-
-      <el-menu :default-active="activeMenu" router>
+      <el-menu :default-active="activeMenu" :collapse="sidebarCollapsed" router>
+        <template v-if="activeSystem === 'issue'">
         <el-menu-item index="/tickets">
           <el-icon><Tickets /></el-icon>
           <span>{{ t('nav.tickets') }}</span>
@@ -97,10 +133,6 @@ onMounted(() => projects.loadProjects())
         <el-menu-item v-if="auth.hasPermission('ticket:create')" index="/tickets/new">
           <el-icon><Plus /></el-icon>
           <span>{{ t('nav.createTicket') }}</span>
-        </el-menu-item>
-        <el-menu-item v-if="auth.hasPermission('user:manage')" index="/admin/users">
-          <el-icon><User /></el-icon>
-          <span>{{ t('nav.users') }}</span>
         </el-menu-item>
         <el-menu-item v-if="auth.hasPermission('version:manage')" index="/admin/versions">
           <el-icon><Collection /></el-icon>
@@ -110,14 +142,24 @@ onMounted(() => projects.loadProjects())
           <el-icon><FolderOpened /></el-icon>
           <span>{{ t('nav.projects') }}</span>
         </el-menu-item>
+        </template>
+        <template v-else>
+        <el-menu-item v-if="auth.hasPermission('user:manage')" index="/admin/users">
+          <el-icon><User /></el-icon>
+          <span>{{ t('nav.users') }}</span>
+        </el-menu-item>
+        </template>
       </el-menu>
-      <div class="sidebar-user">
-        <el-avatar>{{ auth.user?.displayName?.slice(0, 1) }}</el-avatar>
-        <div class="sidebar-user-info">
-          <strong>{{ auth.user?.displayName }}</strong>
-          <span>{{ auth.user?.roles.join(' / ') }}</span>
-        </div>
-        <el-button :icon="SwitchButton" circle text :title="t('app.logout')" @click="logout" />
+      <div class="sidebar-footer">
+        <el-button
+          text
+          class="sidebar-toggle"
+          :icon="sidebarCollapsed ? Expand : Fold"
+          :title="sidebarCollapsed ? t('platform.expandSidebar') : t('platform.collapseSidebar')"
+          @click="toggleSidebar"
+        >
+          <span>{{ sidebarCollapsed ? t('platform.expandSidebar') : t('platform.collapseSidebar') }}</span>
+        </el-button>
       </div>
     </aside>
 
@@ -129,6 +171,7 @@ onMounted(() => projects.loadProjects())
         </div>
         <div class="topbar-actions">
           <el-select
+            v-if="activeSystem === 'issue'"
             v-model="projects.currentProjectId"
             class="project-switcher"
             :loading="projects.loading"

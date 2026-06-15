@@ -1,12 +1,14 @@
 <script setup lang="ts">
-import { reactive, ref } from 'vue'
+import { computed, reactive, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { ElMessage, type FormInstance, type FormRules } from 'element-plus'
 import { useAuthStore } from '@/stores/auth'
 import { errorMessage } from '@/api/http'
+import { setAppLocale, useAppI18n } from '@/i18n'
 
 const router = useRouter()
 const auth = useAuthStore()
+const { locale, t } = useAppI18n()
 const formRef = ref<FormInstance>()
 const loading = ref(false)
 const form = reactive({
@@ -16,29 +18,33 @@ const form = reactive({
   password: '',
   confirmPassword: '',
 })
-const rules: FormRules = {
+const rules = computed<FormRules>(() => ({
   username: [
-    { required: true, message: '请输入用户名', trigger: 'blur' },
-    { pattern: /^[a-zA-Z0-9_]{4,50}$/, message: '4-50 位字母、数字或下划线', trigger: 'blur' },
+    { required: true, message: t('user.usernameRequired'), trigger: 'blur' },
+    { pattern: /^[a-zA-Z0-9_]{4,50}$/, message: t('user.usernamePattern'), trigger: 'blur' },
   ],
-  displayName: [{ required: true, message: '请输入显示名称', trigger: 'blur' }],
+  displayName: [{ required: true, message: t('user.displayNameRequired'), trigger: 'blur' }],
   email: [
-    { required: true, message: '请输入邮箱', trigger: 'blur' },
-    { type: 'email', message: '邮箱格式不正确', trigger: 'blur' },
+    { required: true, message: t('user.emailRequired'), trigger: 'blur' },
+    { type: 'email', message: t('user.emailInvalid'), trigger: 'blur' },
   ],
   password: [
-    { required: true, message: '请输入密码', trigger: 'blur' },
-    { min: 8, message: '密码至少 8 位', trigger: 'blur' },
-    { pattern: /^(?=.*[A-Za-z])(?=.*\d).+$/, message: '密码需同时包含字母和数字', trigger: 'blur' },
+    { required: true, message: t('auth.passwordRequired'), trigger: 'blur' },
+    { min: 8, message: t('auth.passwordMin'), trigger: 'blur' },
+    { pattern: /^(?=.*[A-Za-z])(?=.*\d).+$/, message: t('auth.passwordPattern'), trigger: 'blur' },
   ],
   confirmPassword: [{
     validator: (_rule, value, callback) => {
-      if (!value) callback(new Error('请再次输入密码'))
-      else if (value !== form.password) callback(new Error('两次输入的密码不一致'))
+      if (!value) callback(new Error(t('auth.confirmPasswordRequired')))
+      else if (value !== form.password) callback(new Error(t('auth.passwordMismatch')))
       else callback()
     },
     trigger: 'blur',
   }],
+}))
+
+function switchLanguage() {
+  setAppLocale(locale.value === 'en' ? 'zh-CN' : 'en')
 }
 
 async function submit() {
@@ -51,7 +57,7 @@ async function submit() {
       email: form.email,
       password: form.password,
     })
-    ElMessage.success('注册成功')
+    ElMessage.success(t('auth.registerSuccess'))
     await router.replace('/')
   } catch (error) {
     ElMessage.error(errorMessage(error))
@@ -63,42 +69,43 @@ async function submit() {
 
 <template>
   <div class="auth-page">
+    <el-button class="language-switcher" text @click="switchLanguage">{{ t('app.language') }}</el-button>
     <section class="auth-hero register-hero">
       <div class="auth-hero-content">
-        <span class="eyebrow light">JOIN THE WORKFLOW</span>
-        <h1>从发现问题开始<br />推动问题解决</h1>
-        <p>注册后即可创建问题单，并持续查看处理进度与验证结果。</p>
+        <span class="eyebrow light">{{ t('auth.registerEyebrow') }}</span>
+        <h1>{{ t('auth.registerHeroTitle').split('\n')[0] }}<br />{{ t('auth.registerHeroTitle').split('\n')[1] }}</h1>
+        <p>{{ t('auth.registerHeroIntro') }}</p>
       </div>
     </section>
     <section class="auth-panel">
       <div class="auth-card wide">
-        <span class="eyebrow">CREATE ACCOUNT</span>
-        <h2>注册新账号</h2>
+        <span class="eyebrow">{{ t('auth.createAccount') }}</span>
+        <h2>{{ t('auth.registerTitle') }}</h2>
         <el-form ref="formRef" :model="form" :rules="rules" label-position="top">
           <div class="form-grid">
-            <el-form-item label="用户名" prop="username">
+            <el-form-item :label="t('user.username')" prop="username">
               <el-input v-model="form.username" size="large" />
             </el-form-item>
-            <el-form-item label="显示名称" prop="displayName">
+            <el-form-item :label="t('user.displayName')" prop="displayName">
               <el-input v-model="form.displayName" size="large" />
             </el-form-item>
           </div>
-          <el-form-item label="邮箱" prop="email">
+          <el-form-item :label="t('user.email')" prop="email">
             <el-input v-model="form.email" size="large" />
           </el-form-item>
           <div class="form-grid">
-            <el-form-item label="密码" prop="password">
+            <el-form-item :label="t('auth.password')" prop="password">
               <el-input v-model="form.password" size="large" type="password" show-password />
             </el-form-item>
-            <el-form-item label="确认密码" prop="confirmPassword">
+            <el-form-item :label="t('auth.confirmPassword')" prop="confirmPassword">
               <el-input v-model="form.confirmPassword" size="large" type="password" show-password />
             </el-form-item>
           </div>
           <el-button class="full-button" type="primary" size="large" :loading="loading" @click="submit">
-            创建账号
+            {{ t('auth.createAccount') }}
           </el-button>
         </el-form>
-        <p class="auth-switch">已有账号？<router-link to="/login">返回登录</router-link></p>
+        <p class="auth-switch">{{ t('auth.alreadyAccount') }}<router-link to="/login">{{ t('auth.backToLogin') }}</router-link></p>
       </div>
     </section>
   </div>

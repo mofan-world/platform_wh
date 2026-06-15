@@ -1,19 +1,25 @@
 <script setup lang="ts">
-import { reactive, ref } from 'vue'
+import { computed, reactive, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { ElMessage, type FormInstance, type FormRules } from 'element-plus'
 import { useAuthStore } from '@/stores/auth'
 import { errorMessage } from '@/api/http'
+import { setAppLocale, useAppI18n } from '@/i18n'
 
 const route = useRoute()
 const router = useRouter()
 const auth = useAuthStore()
+const { locale, t } = useAppI18n()
 const formRef = ref<FormInstance>()
 const loading = ref(false)
 const form = reactive({ username: '', password: '' })
-const rules: FormRules = {
-  username: [{ required: true, message: '请输入用户名', trigger: 'blur' }],
-  password: [{ required: true, message: '请输入密码', trigger: 'blur' }],
+const rules = computed<FormRules>(() => ({
+  username: [{ required: true, message: t('auth.usernameRequired'), trigger: 'blur' }],
+  password: [{ required: true, message: t('auth.passwordRequired'), trigger: 'blur' }],
+}))
+
+function switchLanguage() {
+  setAppLocale(locale.value === 'en' ? 'zh-CN' : 'en')
 }
 
 async function submit() {
@@ -21,7 +27,7 @@ async function submit() {
   loading.value = true
   try {
     await auth.login(form)
-    ElMessage.success('登录成功')
+    ElMessage.success(t('auth.loginSuccess'))
     const redirect = (route.query.redirect as string) || '/'
     if (redirect.startsWith('/travel/')) {
       window.location.assign(redirect)
@@ -38,35 +44,36 @@ async function submit() {
 
 <template>
   <div class="auth-page">
+    <el-button class="language-switcher" text @click="switchLanguage">{{ t('app.language') }}</el-button>
     <section class="auth-hero">
       <div class="auth-hero-content">
-        <span class="eyebrow light">PLATFORM IDENTITY</span>
-        <h1>统一身份认证<br />连接所有业务系统</h1>
-        <p>一次登录后可访问问题跟踪、出差车票和后续接入的业务系统，角色权限由身份认证中心统一维护。</p>
+        <span class="eyebrow light">{{ t('auth.eyebrow') }}</span>
+        <h1>{{ t('auth.heroTitle').split('\n')[0] }}<br />{{ t('auth.heroTitle').split('\n')[1] }}</h1>
+        <p>{{ t('auth.heroIntro') }}</p>
         <div class="hero-metrics">
-          <div><strong>SSO</strong><span>统一登录</span></div>
-          <div><strong>RBAC</strong><span>角色授权</span></div>
-          <div><strong>Nacos</strong><span>微服务接入</span></div>
+          <div><strong>SSO</strong><span>{{ t('auth.sso') }}</span></div>
+          <div><strong>RBAC</strong><span>{{ t('auth.rbac') }}</span></div>
+          <div><strong>Nacos</strong><span>{{ t('auth.microservice') }}</span></div>
         </div>
       </div>
     </section>
     <section class="auth-panel">
       <div class="auth-card">
-        <span class="eyebrow">WELCOME BACK</span>
-        <h2>登录统一平台</h2>
-        <p class="muted">使用统一身份认证账号继续</p>
+        <span class="eyebrow">{{ t('auth.welcome') }}</span>
+        <h2>{{ t('auth.loginTitle') }}</h2>
+        <p class="muted">{{ t('auth.loginSubtitle') }}</p>
         <el-form ref="formRef" :model="form" :rules="rules" label-position="top" @keyup.enter="submit">
-          <el-form-item label="用户名" prop="username">
-            <el-input v-model="form.username" size="large" placeholder="请输入用户名" />
+          <el-form-item :label="t('auth.username')" prop="username">
+            <el-input v-model="form.username" size="large" :placeholder="t('auth.usernamePlaceholder')" />
           </el-form-item>
-          <el-form-item label="密码" prop="password">
-            <el-input v-model="form.password" size="large" type="password" show-password placeholder="请输入密码" />
+          <el-form-item :label="t('auth.password')" prop="password">
+            <el-input v-model="form.password" size="large" type="password" show-password :placeholder="t('auth.passwordPlaceholder')" />
           </el-form-item>
           <el-button class="full-button" type="primary" size="large" :loading="loading" @click="submit">
-            登录
+            {{ t('auth.loginButton') }}
           </el-button>
         </el-form>
-        <p class="auth-switch">还没有账号？<router-link to="/register">立即注册</router-link></p>
+        <p class="auth-switch">{{ t('auth.noAccount') }}<router-link to="/register">{{ t('auth.registerNow') }}</router-link></p>
       </div>
     </section>
   </div>

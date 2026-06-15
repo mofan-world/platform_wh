@@ -9,118 +9,148 @@
   <body>
     <div id="app" v-cloak>
       <main v-if="!currentUser" class="auth-page">
+        <button class="language-chip" type="button" @click="toggleLocale">{{ t("common.language") }}</button>
         <section class="auth-panel">
           <div class="auth-brand">
             <span class="brand-mark">T</span>
             <div>
-              <p>Travel Ticket Ops</p>
-              <h1>出差车票管理系统</h1>
+              <p>{{ t("auth.eyebrow") }}</p>
+              <h1>{{ t("auth.title") }}</h1>
             </div>
           </div>
 
-          <p class="hint">正在跳转到统一身份认证中心...</p>
-          <button class="primary-action" type="button" @click="redirectToLogin">统一登录</button>
+          <p class="hint">{{ t("auth.redirecting") }}</p>
+          <button class="primary-action" type="button" @click="redirectToLogin">{{ t("auth.login") }}</button>
         </section>
         <div v-if="toast" class="toast">{{ toast }}</div>
       </main>
 
-      <main v-else class="app-shell">
+      <main v-else class="app-shell" :class="{ 'sidebar-collapsed': sidebarCollapsed }">
+        <header class="platform-topbar">
+          <div class="platform-brand">
+            <span class="platform-logo">UP</span>
+            <strong>{{ t("platform.title") }}</strong>
+          </div>
+          <nav class="system-switcher" :aria-label="t('platform.switchSystem')">
+            <button type="button" @click="openIssueTracker">{{ t("platform.issue") }}</button>
+            <button type="button" class="active">{{ t("platform.travel") }}</button>
+            <button v-if="canManageIdentity" type="button" @click="openIdentityCenter">{{ t("platform.identity") }}</button>
+          </nav>
+          <div class="platform-user">
+            <button class="language-chip" type="button" @click="toggleLocale">{{ t("common.language") }}</button>
+            <span class="online-dot"></span>
+            <span class="user-avatar">{{ currentUser.name.slice(0, 1) }}</span>
+            <div class="platform-user-info">
+              <strong>{{ currentUser.name }}</strong>
+              <span>{{ currentUser.roles.join(" / ") }}</span>
+            </div>
+            <button class="topbar-logout" type="button" @click="logout">{{ t("common.signOut") }}</button>
+          </div>
+        </header>
+
         <aside class="sidebar">
           <div class="brand">
             <span class="brand-mark">T</span>
             <div>
-              <strong>车票管理</strong>
-              <small>{{ currentUser.company }}</small>
+              <strong>{{ t("platform.travel") }}</strong>
+              <small>{{ t("platform.currentSystem") }}</small>
             </div>
           </div>
-          <div class="module-switcher">
-            <span>统一平台</span>
-            <button type="button" @click="openIssueTracker">问题跟踪</button>
-            <button type="button" class="active">出差车票</button>
-            <button v-if="canManageIdentity" type="button" @click="openIdentityCenter">身份认证</button>
-          </div>
           <nav>
-            <button :class="{ active: activeSection === 'dashboard' }" @click="switchSection('dashboard')">总览</button>
-            <button :class="{ active: activeSection === 'tickets' }" @click="switchSection('tickets')">车票</button>
-            <button v-if="canApproveTickets" :class="{ active: activeSection === 'approvals' }" @click="switchSection('approvals')">审批</button>
-            <button :class="{ active: activeSection === 'risk' }" @click="switchSection('risk')">风控</button>
+            <button :class="{ active: activeSection === 'dashboard' }" @click="switchSection('dashboard')">
+              <span class="nav-icon">D</span>
+              <span class="nav-label">{{ t("nav.dashboard") }}</span>
+            </button>
+            <button :class="{ active: activeSection === 'tickets' }" @click="switchSection('tickets')">
+              <span class="nav-icon">T</span>
+              <span class="nav-label">{{ t("nav.tickets") }}</span>
+            </button>
+            <button v-if="canApproveTickets" :class="{ active: activeSection === 'approvals' }" @click="switchSection('approvals')">
+              <span class="nav-icon">A</span>
+              <span class="nav-label">{{ t("nav.approvals") }}</span>
+            </button>
+            <button :class="{ active: activeSection === 'risk' }" @click="switchSection('risk')">
+              <span class="nav-icon">R</span>
+              <span class="nav-label">{{ t("nav.risk") }}</span>
+            </button>
           </nav>
-          <div class="user-box">
-            <strong>{{ currentUser.name }}</strong>
-            <span>{{ currentUser.email }}</span>
-            <button @click="logout">退出登录</button>
+          <div class="sidebar-footer">
+            <button class="sidebar-toggle" type="button" @click="toggleSidebar">
+              <span class="nav-icon">{{ sidebarCollapsed ? ">" : "<" }}</span>
+              <span class="nav-label">{{ sidebarCollapsed ? t("platform.expandSidebar") : t("platform.collapseSidebar") }}</span>
+            </button>
           </div>
         </aside>
 
         <section class="workspace">
           <header class="topbar">
             <div>
-              <p class="eyebrow">运营控制台</p>
+              <p class="eyebrow">{{ t("section.eyebrow") }}</p>
               <h1>{{ sectionTitle }}</h1>
               <p class="hint">{{ sectionHint }}</p>
             </div>
             <div class="topbar-actions">
-              <button class="ghost-action" @click="reloadData" :disabled="loading">刷新</button>
-              <button v-if="canCreateTicket" class="ghost-action" @click="seedDemoData" :disabled="loading">导入演示数据</button>
-              <button v-if="canReindexSearch" class="ghost-action" @click="reindexSearch" :disabled="loading">重建 ES 索引</button>
-              <button class="ghost-action" @click="exportCsv">导出 CSV</button>
-              <button v-if="canCreateTicket" class="primary-action" @click="openCreateForm">新增车票</button>
+              <button class="ghost-action" @click="reloadData" :disabled="loading">{{ t("common.refresh") }}</button>
+              <button v-if="canCreateTicket" class="ghost-action" @click="seedDemoData" :disabled="loading">{{ t("common.seed") }}</button>
+              <button v-if="canReindexSearch" class="ghost-action" @click="reindexSearch" :disabled="loading">{{ t("common.reindex") }}</button>
+              <button class="ghost-action" @click="exportCsv">{{ t("common.exportCsv") }}</button>
+              <button v-if="canCreateTicket" class="primary-action" @click="openCreateForm">{{ t("common.newTicket") }}</button>
             </div>
           </header>
 
           <section v-if="isDashboard" id="dashboard" class="metric-grid">
             <article class="metric">
-              <span>车票总数</span>
+              <span>{{ t("metrics.total") }}</span>
               <strong>{{ metrics.total }}</strong>
-              <small>PostgreSQL 持久化记录</small>
+              <small>{{ t("metrics.totalHint") }}</small>
             </article>
             <article class="metric">
-              <span>待处理金额</span>
+              <span>{{ t("metrics.pendingAmount") }}</span>
               <strong>{{ money(metrics.pendingAmount) }}</strong>
-              <small>待审批、待补票、异常</small>
+              <small>{{ t("metrics.pendingHint") }}</small>
             </article>
             <article class="metric">
-              <span>风险率</span>
+              <span>{{ t("metrics.riskRate") }}</span>
               <strong>{{ metrics.riskRate }}%</strong>
-              <small>高额或凭证缺失</small>
+              <small>{{ t("metrics.riskHint") }}</small>
             </article>
             <article class="metric">
-              <span>已通过</span>
+              <span>{{ t("metrics.approved") }}</span>
               <strong>{{ metrics.approved }}</strong>
-              <small>已通过与已核销</small>
+              <small>{{ t("metrics.approvedHint") }}</small>
             </article>
           </section>
 
-          <section class="filters" aria-label="车票筛选">
+          <section class="filters" :aria-label="t('filters.aria')">
             <label>
-              搜索
-              <input v-model="filters.query" type="search" placeholder="员工 / 票号 / 城市 / 车次" @keyup.enter="resetAllPagesAndReload" />
+              {{ t("filters.search") }}
+              <input v-model="filters.query" type="search" :placeholder="t('filters.searchPlaceholder')" @keyup.enter="resetAllPagesAndReload" />
             </label>
             <label v-if="activeSection !== 'approvals'">
-              状态
+              {{ t("filters.status") }}
               <select v-model="filters.status" @change="resetAllPagesAndReload">
-                <option v-for="status in statuses" :key="status" :value="status">{{ status }}</option>
+                <option v-for="status in statuses" :key="status" :value="status">{{ statusText(status) }}</option>
               </select>
             </label>
             <label v-else>
-              状态
-              <input value="待审批" disabled />
+              {{ t("filters.status") }}
+              <input :value="statusText('待审批')" disabled />
             </label>
             <label>
-              城市
+              {{ t("filters.city") }}
               <select v-model="filters.city" @change="resetAllPagesAndReload">
-                <option v-for="city in cities" :key="city" :value="city">{{ city }}</option>
+                <option v-for="city in cities" :key="city" :value="city">{{ cityText(city) }}</option>
               </select>
             </label>
             <label>
-              票种
+              {{ t("filters.ticketType") }}
               <select v-model="filters.ticketType" @change="resetAllPagesAndReload">
-                <option v-for="type in ticketTypes" :key="type" :value="type">{{ type }}</option>
+                <option v-for="type in ticketTypes" :key="type" :value="type">{{ ticketTypeText(type) }}</option>
               </select>
             </label>
             <div class="filter-actions">
-              <button type="button" class="primary-action" @click="resetAllPagesAndReload" :disabled="loading">查询</button>
-              <button type="button" class="ghost-action" @click="clearFilters" :disabled="loading">重置</button>
+              <button type="button" class="primary-action" @click="resetAllPagesAndReload" :disabled="loading">{{ t("common.search") }}</button>
+              <button type="button" class="ghost-action" @click="clearFilters" :disabled="loading">{{ t("common.reset") }}</button>
             </div>
           </section>
 
@@ -128,22 +158,22 @@
             <article v-if="showTicketModule" id="tickets" class="panel ticket-panel">
               <div class="panel-head">
                 <div>
-                  <p class="eyebrow">车票池</p>
-                  <h2>车票记录</h2>
+                  <p class="eyebrow">{{ t("panel.ticketPool") }}</p>
+                  <h2>{{ t("panel.ticketRecords") }}</h2>
                 </div>
-                <span>{{ ticketRangeText }} / 共 {{ ticketPager.total }} 条</span>
+                <span>{{ ticketRangeText }} / {{ format("common.total", { total: ticketPager.total }) }}</span>
               </div>
               <div class="table-wrap">
                 <table>
                   <thead>
                     <tr>
-                      <th>员工</th>
-                      <th>路线</th>
-                      <th>票据</th>
-                      <th>金额</th>
-                      <th>状态</th>
-                      <th>风险</th>
-                      <th>操作</th>
+                      <th>{{ t("table.employee") }}</th>
+                      <th>{{ t("table.route") }}</th>
+                      <th>{{ t("table.ticket") }}</th>
+                      <th>{{ t("table.amount") }}</th>
+                      <th>{{ t("table.status") }}</th>
+                      <th>{{ t("table.risk") }}</th>
+                      <th>{{ t("table.actions") }}</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -153,40 +183,40 @@
                         <small>{{ ticket.department }} / {{ ticket.employeeId }}</small>
                       </td>
                       <td>
-                        <strong>{{ ticket.departureCity }} -> {{ ticket.arrivalCity }}</strong>
+                        <strong>{{ cityText(ticket.departureCity) }} -> {{ cityText(ticket.arrivalCity) }}</strong>
                         <small>{{ ticket.tripPurpose }}</small>
                       </td>
                       <td>
                         <strong>{{ ticket.carrierNo }}</strong>
-                        <small>{{ ticket.ticketNo }} · {{ ticket.ticketType }}</small>
+                        <small>{{ ticket.ticketNo }} · {{ ticketTypeText(ticket.ticketType) }}</small>
                       </td>
                       <td>{{ money(ticket.amount) }}</td>
-                      <td><span class="status" :data-status="ticket.status">{{ ticket.status }}</span></td>
-                      <td><span class="risk" :data-risk="ticket.riskLevel">{{ ticket.riskLevel }}</span></td>
+                      <td><span class="status" :data-status="ticket.status">{{ statusText(ticket.status) }}</span></td>
+                      <td><span class="risk" :data-risk="ticket.riskLevel">{{ riskText(ticket.riskLevel) }}</span></td>
                       <td class="row-actions">
-                        <button v-if="canEditTickets" title="编辑" @click="editTicket(ticket)">编辑</button>
-                        <button v-if="canDeleteTickets" class="danger-text" title="删除" @click="removeTicket(ticket)">删除</button>
-                        <span v-if="!canEditTickets && !canDeleteTickets" class="muted-action">只读</span>
+                        <button v-if="canEditTickets" :title="t('common.edit')" @click="editTicket(ticket)">{{ t("common.edit") }}</button>
+                        <button v-if="canDeleteTickets" class="danger-text" :title="t('common.delete')" @click="removeTicket(ticket)">{{ t("common.delete") }}</button>
+                        <span v-if="!canEditTickets && !canDeleteTickets" class="muted-action">{{ t("common.readonly") }}</span>
                       </td>
                     </tr>
                   </tbody>
                 </table>
               </div>
               <div class="pager">
-                <p>本页筛选 {{ filteredTickets.length }} 条 · 第 {{ ticketPager.page + 1 }} / {{ ticketPageCount }} 页</p>
+                <p>{{ format("common.filtered", { count: filteredTickets.length }) }} · {{ format("common.page", { page: ticketPager.page + 1, pages: ticketPageCount }) }}</p>
                 <div class="pager-controls">
                   <label>
-                    每页
+                    {{ t("common.pageSize") }}
                     <select v-model.number="ticketPager.size" @change="resetTicketPageAndReload">
                       <option :value="20">20</option>
                       <option :value="50">50</option>
                       <option :value="100">100</option>
                     </select>
                   </label>
-                  <button type="button" @click="goTicketPage(0)" :disabled="loading || ticketPager.page === 0">首页</button>
-                  <button type="button" @click="goTicketPage(ticketPager.page - 1)" :disabled="loading || ticketPager.page === 0">上一页</button>
-                  <button type="button" @click="goTicketPage(ticketPager.page + 1)" :disabled="loading || ticketPager.page + 1 >= ticketPageCount">下一页</button>
-                  <button type="button" @click="goTicketPage(ticketPageCount - 1)" :disabled="loading || ticketPager.page + 1 >= ticketPageCount">末页</button>
+                  <button type="button" @click="goTicketPage(0)" :disabled="loading || ticketPager.page === 0">{{ t("common.firstPage") }}</button>
+                  <button type="button" @click="goTicketPage(ticketPager.page - 1)" :disabled="loading || ticketPager.page === 0">{{ t("common.prevPage") }}</button>
+                  <button type="button" @click="goTicketPage(ticketPager.page + 1)" :disabled="loading || ticketPager.page + 1 >= ticketPageCount">{{ t("common.nextPage") }}</button>
+                  <button type="button" @click="goTicketPage(ticketPageCount - 1)" :disabled="loading || ticketPager.page + 1 >= ticketPageCount">{{ t("common.lastPage") }}</button>
                 </div>
               </div>
             </article>
@@ -194,8 +224,8 @@
             <article v-if="showApprovalModule" id="approvals" class="panel">
               <div class="panel-head">
                 <div>
-                  <p class="eyebrow">审批队列</p>
-                  <h2>待审批车票</h2>
+                  <p class="eyebrow">{{ t("panel.approvalQueue") }}</p>
+                  <h2>{{ t("panel.pendingTickets") }}</h2>
                 </div>
               </div>
               <div class="stack-list">
@@ -204,29 +234,29 @@
                     <strong>{{ ticket.employeeName }} / {{ ticket.department }}</strong>
                     <span>{{ money(ticket.amount) }}</span>
                   </header>
-                  <p>{{ ticket.departureCity }} 到 {{ ticket.arrivalCity }}，{{ ticket.carrierNo }}，{{ ticket.tripPurpose }}</p>
+                  <p>{{ cityText(ticket.departureCity) }} -> {{ cityText(ticket.arrivalCity) }} · {{ ticket.carrierNo }} · {{ ticket.tripPurpose }}</p>
                   <div v-if="canApproveTickets" class="inline-actions">
-                    <button @click="updateStatus(ticket, '已通过')">通过</button>
-                    <button @click="updateStatus(ticket, '已驳回')">驳回</button>
-                    <button @click="updateStatus(ticket, '待补票')">补票</button>
-                    <button @click="updateStatus(ticket, '已核销')">核销</button>
+                    <button @click="updateStatus(ticket, '已通过')">{{ t("common.approve") }}</button>
+                    <button @click="updateStatus(ticket, '已驳回')">{{ t("common.reject") }}</button>
+                    <button @click="updateStatus(ticket, '待补票')">{{ t("common.returnTicket") }}</button>
+                    <button @click="updateStatus(ticket, '已核销')">{{ t("common.reimburse") }}</button>
                   </div>
                 </section>
-                <p v-if="!pendingTickets.length" class="empty">暂无待审批车票</p>
+                <p v-if="!pendingTickets.length" class="empty">{{ t("panel.noPending") }}</p>
               </div>
               <div class="pager compact-pager">
-                <p>{{ pendingRangeText }} / 共 {{ pendingPager.total }} 条 · 第 {{ pendingPager.page + 1 }} / {{ pendingPageCount }} 页</p>
+                <p>{{ pendingRangeText }} / {{ format("common.total", { total: pendingPager.total }) }} · {{ format("common.page", { page: pendingPager.page + 1, pages: pendingPageCount }) }}</p>
                 <div class="pager-controls">
                   <label>
-                    每页
+                    {{ t("common.pageSize") }}
                     <select v-model.number="pendingPager.size" @change="resetPendingPageAndReload">
                       <option :value="20">20</option>
                       <option :value="50">50</option>
                       <option :value="100">100</option>
                     </select>
                   </label>
-                  <button type="button" @click="goPendingPage(pendingPager.page - 1)" :disabled="loading || pendingPager.page === 0">上一页</button>
-                  <button type="button" @click="goPendingPage(pendingPager.page + 1)" :disabled="loading || pendingPager.page + 1 >= pendingPageCount">下一页</button>
+                  <button type="button" @click="goPendingPage(pendingPager.page - 1)" :disabled="loading || pendingPager.page === 0">{{ t("common.prevPage") }}</button>
+                  <button type="button" @click="goPendingPage(pendingPager.page + 1)" :disabled="loading || pendingPager.page + 1 >= pendingPageCount">{{ t("common.nextPage") }}</button>
                 </div>
               </div>
             </article>
@@ -234,35 +264,35 @@
             <article v-if="showRiskModule" id="risk" class="panel">
               <div class="panel-head">
                 <div>
-                  <p class="eyebrow">风险预警</p>
-                  <h2>需要复核</h2>
+                  <p class="eyebrow">{{ t("panel.riskWarning") }}</p>
+                  <h2>{{ t("panel.needsReview") }}</h2>
                 </div>
-                <span>{{ riskRangeText }} / 共 {{ riskPager.total }} 条</span>
+                <span>{{ riskRangeText }} / {{ format("common.total", { total: riskPager.total }) }}</span>
               </div>
               <div class="stack-list">
                 <section v-for="ticket in riskTickets" :key="ticket.id" class="stack-item">
                   <header>
                     <strong>{{ ticket.employeeName }} / {{ ticket.carrierNo }}</strong>
-                    <span>{{ ticket.riskLevel }}</span>
+                    <span>{{ riskText(ticket.riskLevel) }}</span>
                   </header>
-                  <p>{{ ticket.ticketNo }}，{{ ticket.departureCity }} 到 {{ ticket.arrivalCity }}，凭证：{{ ticket.attachmentStatus }}</p>
+                  <p>{{ ticket.ticketNo }} · {{ cityText(ticket.departureCity) }} -> {{ cityText(ticket.arrivalCity) }} · {{ t("dialog.attachment") }}: {{ attachmentText(ticket.attachmentStatus) }}</p>
                   <p>{{ ticket.message }}</p>
                 </section>
-                <p v-if="!riskTickets.length" class="empty">暂无风险车票</p>
+                <p v-if="!riskTickets.length" class="empty">{{ t("panel.noRisk") }}</p>
               </div>
               <div class="pager compact-pager">
-                <p>第 {{ riskPager.page + 1 }} / {{ riskPageCount }} 页</p>
+                <p>{{ format("common.page", { page: riskPager.page + 1, pages: riskPageCount }) }}</p>
                 <div class="pager-controls">
                   <label>
-                    每页
+                    {{ t("common.pageSize") }}
                     <select v-model.number="riskPager.size" @change="resetRiskPageAndReload">
                       <option :value="20">20</option>
                       <option :value="50">50</option>
                       <option :value="100">100</option>
                     </select>
                   </label>
-                  <button type="button" @click="goRiskPage(riskPager.page - 1)" :disabled="loading || riskPager.page === 0">上一页</button>
-                  <button type="button" @click="goRiskPage(riskPager.page + 1)" :disabled="loading || riskPager.page + 1 >= riskPageCount">下一页</button>
+                  <button type="button" @click="goRiskPage(riskPager.page - 1)" :disabled="loading || riskPager.page === 0">{{ t("common.prevPage") }}</button>
+                  <button type="button" @click="goRiskPage(riskPager.page + 1)" :disabled="loading || riskPager.page + 1 >= riskPageCount">{{ t("common.nextPage") }}</button>
                 </div>
               </div>
             </article>
@@ -273,79 +303,79 @@
           <form class="ticket-form" @submit.prevent="saveTicket">
             <div class="dialog-head">
               <div>
-                <p class="eyebrow">{{ editingId ? "编辑记录" : "新增记录" }}</p>
-                <h2>{{ editingId ? "编辑出差车票" : "新增出差车票" }}</h2>
+                <p class="eyebrow">{{ editingId ? t("dialog.editEyebrow") : t("dialog.newEyebrow") }}</p>
+                <h2>{{ editingId ? t("dialog.editTitle") : t("dialog.newTitle") }}</h2>
               </div>
               <button type="button" class="icon-action" @click="showTicketForm = false">X</button>
             </div>
             <div class="form-grid">
               <label>
-                员工工号
+                {{ t("dialog.employeeId") }}
                 <input v-model="ticketForm.employeeId" required placeholder="10086" />
               </label>
               <label>
-                员工姓名
-                <input v-model="ticketForm.employeeName" required placeholder="姓名" />
+                {{ t("dialog.employeeName") }}
+                <input v-model="ticketForm.employeeName" required placeholder="Name" />
               </label>
               <label>
-                部门
-                <input v-model="ticketForm.department" required placeholder="部门" />
+                {{ t("dialog.department") }}
+                <input v-model="ticketForm.department" required placeholder="Department" />
               </label>
               <label>
-                出差事由
-                <input v-model="ticketForm.tripPurpose" required placeholder="客户拜访 / 项目交付" />
+                {{ t("dialog.tripPurpose") }}
+                <input v-model="ticketForm.tripPurpose" required placeholder="Project delivery" />
               </label>
               <label>
-                票种
+                {{ t("dialog.ticketType") }}
                 <select v-model="ticketForm.ticketType">
-                  <option v-for="type in editableTicketTypes" :key="type" :value="type">{{ type }}</option>
+                  <option v-for="type in editableTicketTypes" :key="type" :value="type">{{ ticketTypeText(type) }}</option>
                 </select>
               </label>
               <label>
-                票号
+                {{ t("dialog.ticketNo") }}
                 <input v-model="ticketForm.ticketNo" required placeholder="G12-20260610-001" />
               </label>
               <label>
-                车次/航班
+                {{ t("dialog.carrierNo") }}
                 <input v-model="ticketForm.carrierNo" required placeholder="G12" />
               </label>
               <label>
-                出发城市
-                <input v-model="ticketForm.departureCity" required placeholder="上海" />
+                {{ t("dialog.departureCity") }}
+                <input v-model="ticketForm.departureCity" required placeholder="Shanghai" />
               </label>
               <label>
-                到达城市
-                <input v-model="ticketForm.arrivalCity" required placeholder="北京" />
+                {{ t("dialog.arrivalCity") }}
+                <input v-model="ticketForm.arrivalCity" required placeholder="Beijing" />
               </label>
               <label>
-                出发时间
+                {{ t("dialog.departureAt") }}
                 <input v-model="ticketForm.departureAt" type="datetime-local" />
               </label>
               <label>
-                座席
-                <input v-model="ticketForm.seatClass" placeholder="二等座" />
+                {{ t("dialog.seatClass") }}
+                <input v-model="ticketForm.seatClass" placeholder="Second class" />
               </label>
               <label>
-                金额
+                {{ t("dialog.amount") }}
                 <input v-model.number="ticketForm.amount" type="number" min="1" step="0.01" required placeholder="553.00" />
               </label>
               <label>
-                状态
+                {{ t("dialog.status") }}
                 <select v-model="ticketForm.status">
-                  <option v-for="status in editableStatuses" :key="status" :value="status">{{ status }}</option>
+                  <option v-for="status in editableStatuses" :key="status" :value="status">{{ statusText(status) }}</option>
                 </select>
               </label>
               <label>
-                凭证
+                {{ t("dialog.attachment") }}
                 <select v-model="ticketForm.attachmentStatus">
-                  <option>已上传</option>
-                  <option>缺失</option>
+                  <option value="已上传">{{ attachmentText("已上传") }}</option>
+                  <option value="缺失">{{ attachmentText("缺失") }}</option>
                 </select>
               </label>
             </div>
             <div class="dialog-actions">
-              <button type="button" class="ghost-action" @click="showTicketForm = false">取消</button>
-              <button class="primary-action" type="submit" :disabled="loading">保存</button>
+              <button type="button" class="ghost-action" @click="showTicketForm = false">{{ t("common.cancel") }}</button>
+              <button class="primary-action" type="submit" :disabled="loading">{{ t("common.save") }}</button>
             </div>
           </form>
         </dialog>
@@ -354,21 +384,19 @@
           <section class="confirm-dialog" role="dialog" aria-modal="true" aria-labelledby="delete-ticket-title">
             <div class="confirm-mark">!</div>
             <div class="confirm-copy">
-              <p class="eyebrow">删除确认</p>
-              <h2 id="delete-ticket-title">确认删除这张车票？</h2>
+              <p class="eyebrow">{{ t("dialog.deleteEyebrow") }}</p>
+              <h2 id="delete-ticket-title">{{ t("dialog.deleteTitle") }}</h2>
               <p>
-                {{ deleteTarget.employeeName }} 的 {{ deleteTarget.carrierNo }} 车票
-                <strong>{{ deleteTarget.ticketNo }}</strong>
-                将从业务库删除，并同步清理 Redis 快照与 ES 索引。
+                {{ format("dialog.deleteBody", { employee: deleteTarget.employeeName, carrier: deleteTarget.carrierNo, ticketNo: deleteTarget.ticketNo }) }}
               </p>
               <div class="confirm-meta">
-                <span>{{ deleteTarget.departureCity }} -> {{ deleteTarget.arrivalCity }}</span>
+                <span>{{ cityText(deleteTarget.departureCity) }} -> {{ cityText(deleteTarget.arrivalCity) }}</span>
                 <span>{{ money(deleteTarget.amount) }}</span>
               </div>
             </div>
             <div class="confirm-actions">
-              <button type="button" class="ghost-action" @click="cancelDelete">取消</button>
-              <button type="button" class="danger-action" :disabled="loading" @click="confirmRemoveTicket">确认删除</button>
+              <button type="button" class="ghost-action" @click="cancelDelete">{{ t("common.cancel") }}</button>
+              <button type="button" class="danger-action" :disabled="loading" @click="confirmRemoveTicket">{{ t("dialog.confirmDelete") }}</button>
             </div>
           </section>
         </div>

@@ -45,29 +45,36 @@ const form = reactive({
   roleIds: [] as number[],
 })
 const dialogTitle = computed(() => editingId.value ? t('user.edit') : t('user.add'))
-const rules: FormRules = {
+const rules = computed<FormRules>(() => ({
   username: [
-    { required: true, message: '请输入用户名', trigger: 'blur' },
-    { pattern: /^[a-zA-Z0-9_]{4,50}$/, message: '4-50 位字母、数字或下划线', trigger: 'blur' },
+    { required: true, message: t('user.usernameRequired'), trigger: 'blur' },
+    { pattern: /^[a-zA-Z0-9_]{4,50}$/, message: t('user.usernamePattern'), trigger: 'blur' },
   ],
   email: [
-    { required: true, message: '请输入邮箱', trigger: 'blur' },
-    { type: 'email', message: '邮箱格式不正确', trigger: 'blur' },
+    { required: true, message: t('user.emailRequired'), trigger: 'blur' },
+    { type: 'email', message: t('user.emailInvalid'), trigger: 'blur' },
   ],
-  displayName: [{ required: true, message: '请输入显示名称', trigger: 'blur' }],
+  displayName: [{ required: true, message: t('user.displayNameRequired'), trigger: 'blur' }],
   password: [{
     validator: (_rule, value, callback) => {
       if (!editingId.value && !value) {
-        callback(new Error('新增用户必须设置密码'))
+        callback(new Error(t('user.passwordRequiredOnCreate')))
       } else if (value && (value.length < 8 || !/[A-Za-z]/.test(value) || !/\d/.test(value))) {
-        callback(new Error('密码至少 8 位且同时包含字母和数字'))
+        callback(new Error(t('user.passwordPattern')))
       } else {
         callback()
       }
     },
     trigger: 'blur',
   }],
-  roleIds: [{ type: 'array', min: 1, required: true, message: '至少选择一个角色', trigger: 'change' }],
+  roleIds: [{ type: 'array', min: 1, required: true, message: t('user.roleRequired'), trigger: 'change' }],
+}))
+
+function format(path: string, vars: Record<string, string | number>) {
+  return Object.entries(vars).reduce(
+    (message, [key, value]) => message.replace(`{${key}}`, String(value)),
+    t(path),
+  )
 }
 
 async function load() {
@@ -91,7 +98,7 @@ async function load() {
       roles.value = rolesResult.value.data
     } else {
       roles.value = []
-      ElMessage.error(`角色数据加载失败：${errorMessage(rolesResult.reason)}`)
+      ElMessage.error(format('user.loadRolesFailed', { message: errorMessage(rolesResult.reason) }))
     }
   } catch (error) {
     ElMessage.error(errorMessage(error))
@@ -141,7 +148,7 @@ async function saveUser() {
     } else {
       await http.post('/api/admin/users', payload)
     }
-    ElMessage.success(editingId.value ? '用户已更新' : '用户已创建，可以使用该账号登录')
+    ElMessage.success(editingId.value ? t('user.updated') : t('user.created'))
     dialogVisible.value = false
     await load()
   } catch (error) {
@@ -154,7 +161,7 @@ async function saveUser() {
 async function toggleEnabled(user: User) {
   try {
     await http.patch(`/api/admin/users/${user.id}/enabled`, { enabled: user.enabled })
-    ElMessage.success(user.enabled ? '用户已启用' : '用户已禁用')
+    ElMessage.success(user.enabled ? t('user.enabledMessage') : t('user.disabledMessage'))
   } catch (error) {
     user.enabled = !user.enabled
     ElMessage.error(errorMessage(error))
@@ -164,12 +171,12 @@ async function toggleEnabled(user: User) {
 async function deleteUser(user: User) {
   try {
     await ElMessageBox.confirm(
-      `确认删除用户 ${user.displayName}（${user.username}）？历史问题单记录会保留，该账号将无法登录。`,
-      '删除用户',
-      { type: 'warning', confirmButtonText: '确认删除', cancelButtonText: '取消' },
+      format('user.deleteConfirm', { name: user.displayName, username: user.username }),
+      t('user.deleteTitle'),
+      { type: 'warning', confirmButtonText: t('common.delete'), cancelButtonText: t('common.cancel') },
     )
     await http.delete(`/api/admin/users/${user.id}`)
-    ElMessage.success('用户已删除')
+    ElMessage.success(t('user.deleted'))
     await load()
   } catch (error) {
     if (error !== 'cancel' && error !== 'close') ElMessage.error(errorMessage(error))
@@ -188,7 +195,7 @@ onMounted(load)
   <section class="panel">
     <div class="section-heading compact">
       <div>
-        <span class="eyebrow">ACCESS CONTROL</span>
+        <span class="eyebrow">{{ t('user.accessControl') }}</span>
         <h2>{{ t('user.title') }}</h2>
       </div>
       <el-button type="primary" :icon="Plus" @click="createUser">{{ t('user.add') }}</el-button>
