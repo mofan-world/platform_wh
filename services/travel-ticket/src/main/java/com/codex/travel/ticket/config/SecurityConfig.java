@@ -89,6 +89,7 @@ public class SecurityConfig {
             log.info("roleCodes: [{}]", roleCodes);
             log.info("authorities: [{}]", authorities);
             List<String> permissions = jwt.getClaimAsStringList("permissions");
+            log.info("permissions: [{}]", permissions);
             if (permissions != null) {
                 permissions.stream()
                         .map(String::trim)
@@ -96,7 +97,9 @@ public class SecurityConfig {
                         .map(SimpleGrantedAuthority::new)
                         .forEach(authorities::add);
             }
+            log.info("authorities2: [{}]", authorities);
             grantTravelPermissions(roleCodes, authorities);
+            log.info("authorities3: [{}]", authorities);
             return new JwtAuthenticationToken(jwt, authorities, jwt.getSubject());
         };
     }
