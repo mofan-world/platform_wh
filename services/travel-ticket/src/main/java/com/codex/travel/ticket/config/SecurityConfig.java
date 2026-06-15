@@ -51,7 +51,7 @@ public class SecurityConfig {
                         .jwt(jwt -> jwt
                                 .decoder(jwtDecoder)
                                 .jwtAuthenticationConverter(jwtConverter())))
-//                .addFilterAfter(new TenantHeaderFilter(), BearerTokenAuthenticationFilter.class)
+                .addFilterAfter(new TenantHeaderFilter(), BearerTokenAuthenticationFilter.class)
                 .build();
     }
 
