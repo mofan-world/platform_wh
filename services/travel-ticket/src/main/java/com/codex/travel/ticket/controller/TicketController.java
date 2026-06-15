@@ -2,6 +2,7 @@ package com.codex.travel.ticket.controller;
 
 import com.codex.travel.ticket.common.ApiResponse;
 import com.codex.travel.ticket.common.PageResult;
+import com.codex.travel.ticket.config.TravelTicketAuthorities;
 import com.codex.travel.ticket.dto.CreateTicketRequest;
 import com.codex.travel.ticket.dto.TicketResponse;
 import com.codex.travel.ticket.dto.UpdateTicketRequest;
@@ -35,6 +36,7 @@ public class TicketController {
     }
 
     @GetMapping
+    @PreAuthorize(TravelTicketAuthorities.CAN_READ)
     public ApiResponse<PageResult<TicketResponse>> list(
             @RequestHeader("X-Tenant-Id") Long tenantId,
             @RequestParam(name = "status", required = false) TicketStatus status,
@@ -47,7 +49,7 @@ public class TicketController {
     }
 
     @PostMapping
-    @PreAuthorize("hasAuthority('ticket:create')")
+    @PreAuthorize(TravelTicketAuthorities.CAN_CREATE)
     public ResponseEntity<ApiResponse<TicketResponse>> create(
             @RequestHeader("X-Tenant-Id") Long tenantId,
             @Valid @RequestBody CreateTicketRequest request) {
@@ -57,6 +59,7 @@ public class TicketController {
     }
 
     @GetMapping("/{ticketId}")
+    @PreAuthorize(TravelTicketAuthorities.CAN_READ)
     public ApiResponse<TicketResponse> get(
             @RequestHeader("X-Tenant-Id") Long tenantId,
             @PathVariable(name = "ticketId") Long ticketId) {
@@ -64,6 +67,7 @@ public class TicketController {
     }
 
     @PutMapping("/{ticketId}")
+    @PreAuthorize(TravelTicketAuthorities.CAN_UPDATE)
     public ApiResponse<TicketResponse> update(
             @RequestHeader("X-Tenant-Id") Long tenantId,
             @PathVariable(name = "ticketId") Long ticketId,
@@ -72,6 +76,7 @@ public class TicketController {
     }
 
     @DeleteMapping("/{ticketId}")
+    @PreAuthorize(TravelTicketAuthorities.CAN_DELETE)
     public ResponseEntity<ApiResponse<Void>> delete(
             @RequestHeader("X-Tenant-Id") Long tenantId,
             @PathVariable(name = "ticketId") Long ticketId) {

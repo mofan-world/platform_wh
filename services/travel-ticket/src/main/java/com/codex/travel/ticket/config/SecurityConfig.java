@@ -31,52 +31,6 @@ import org.springframework.security.web.SecurityFilterChain;
 @EnableMethodSecurity
 public class SecurityConfig {
 
-    private static final String[] TRAVEL_READ_AUTHORITIES = {
-            "ROLE_ADMIN",
-            "ROLE_TRAVEL_ADMIN",
-            "ROLE_TRAVEL_USER",
-            "ROLE_TRAVEL_APPROVER",
-            "ROLE_TRAVEL_AUDITOR",
-            "travel:ticket:read",
-            "travel:risk:read",
-            "travel:ops:read"
-    };
-
-    private static final String[] TRAVEL_CREATE_AUTHORITIES = {
-            "ROLE_ADMIN",
-            "ROLE_TRAVEL_ADMIN",
-            "ROLE_TRAVEL_USER",
-            "travel:ticket:create"
-    };
-
-    private static final String[] TRAVEL_UPDATE_AUTHORITIES = {
-            "ROLE_ADMIN",
-            "ROLE_TRAVEL_ADMIN",
-            "ROLE_TRAVEL_USER",
-            "ROLE_TRAVEL_APPROVER",
-            "travel:ticket:update"
-    };
-
-    private static final String[] TRAVEL_DELETE_AUTHORITIES = {
-            "ROLE_ADMIN",
-            "ROLE_TRAVEL_ADMIN",
-            "travel:ticket:delete"
-    };
-
-    private static final String[] TRAVEL_APPROVE_AUTHORITIES = {
-            "ROLE_ADMIN",
-            "ROLE_TRAVEL_ADMIN",
-            "ROLE_TRAVEL_APPROVER",
-            "travel:ticket:approve"
-    };
-
-    private static final String[] TRAVEL_ADMIN_AUTHORITIES = {
-            "ROLE_ADMIN",
-            "ROLE_TRAVEL_ADMIN",
-            "travel:search:reindex",
-            "travel:ops:read"
-    };
-
     @Bean
     SecurityFilterChain securityFilterChain(
             HttpSecurity http,
@@ -88,20 +42,6 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/actuator/health/**").permitAll()
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
-                        .requestMatchers(HttpMethod.GET, "/api/v1/reports/**")
-                        .hasAnyAuthority(TRAVEL_READ_AUTHORITIES)
-                        .requestMatchers(HttpMethod.GET, "/api/v1/tickets/**", "/api/v1/risk/**", "/api/v1/search/tickets")
-                        .hasAnyAuthority(TRAVEL_READ_AUTHORITIES)
-                        .requestMatchers(HttpMethod.POST, "/api/v1/tickets")
-                        .hasAnyAuthority(TRAVEL_CREATE_AUTHORITIES)
-                        .requestMatchers(HttpMethod.PUT, "/api/v1/tickets/**")
-                        .hasAnyAuthority(TRAVEL_UPDATE_AUTHORITIES)
-                        .requestMatchers(HttpMethod.DELETE, "/api/v1/tickets/**")
-                        .hasAnyAuthority(TRAVEL_DELETE_AUTHORITIES)
-                        .requestMatchers(HttpMethod.POST, "/api/v1/approvals/**")
-                        .hasAnyAuthority(TRAVEL_APPROVE_AUTHORITIES)
-                        .requestMatchers("/api/v1/search/tickets/reindex", "/api/v1/ops/**")
-                        .hasAnyAuthority(TRAVEL_ADMIN_AUTHORITIES)
                         .anyRequest().authenticated())
                 .oauth2ResourceServer(oauth -> oauth
                         .jwt(jwt -> jwt

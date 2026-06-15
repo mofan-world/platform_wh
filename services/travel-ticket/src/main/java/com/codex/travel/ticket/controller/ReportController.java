@@ -1,9 +1,11 @@
 package com.codex.travel.ticket.controller;
 
 import com.codex.travel.ticket.common.ApiResponse;
+import com.codex.travel.ticket.config.TravelTicketAuthorities;
 import com.codex.travel.ticket.dto.DashboardSummaryResponse;
 import com.codex.travel.ticket.service.TicketService;
 
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -20,6 +22,7 @@ public class ReportController {
     }
 
     @GetMapping("/summary")
+    @PreAuthorize(TravelTicketAuthorities.CAN_READ)
     public ApiResponse<DashboardSummaryResponse> summary(@RequestHeader("X-Tenant-Id") Long tenantId) {
         return ApiResponse.ok(ticketService.dashboardSummary(tenantId));
     }

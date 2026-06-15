@@ -1,6 +1,7 @@
 package com.codex.travel.ticket.controller;
 
 import com.codex.travel.ticket.common.ApiResponse;
+import com.codex.travel.ticket.config.TravelTicketAuthorities;
 import com.codex.travel.ticket.dto.ApprovalActionRequest;
 import com.codex.travel.ticket.dto.TicketResponse;
 import com.codex.travel.ticket.service.TicketService;
@@ -9,6 +10,7 @@ import jakarta.validation.Valid;
 
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -25,6 +27,7 @@ public class ApprovalController {
     }
 
     @PostMapping("/tickets/{ticketId}/actions")
+    @PreAuthorize(TravelTicketAuthorities.CAN_APPROVE)
     public ApiResponse<TicketResponse> action(
             @RequestHeader("X-Tenant-Id") Long tenantId,
             @PathVariable(name = "ticketId") Long ticketId,

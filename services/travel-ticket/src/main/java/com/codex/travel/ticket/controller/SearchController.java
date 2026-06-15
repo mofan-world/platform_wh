@@ -2,10 +2,12 @@ package com.codex.travel.ticket.controller;
 
 import com.codex.travel.ticket.common.ApiResponse;
 import com.codex.travel.ticket.common.PageResult;
+import com.codex.travel.ticket.config.TravelTicketAuthorities;
 import com.codex.travel.ticket.dto.TicketSearchResponse;
 import com.codex.travel.ticket.service.TicketSearchService;
 import com.codex.travel.ticket.service.TicketService;
 
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestHeader;
@@ -26,6 +28,7 @@ public class SearchController {
     }
 
     @GetMapping("/tickets")
+    @PreAuthorize(TravelTicketAuthorities.CAN_READ)
     public ApiResponse<PageResult<TicketSearchResponse>> searchTickets(
             @RequestHeader("X-Tenant-Id") Long tenantId,
             @RequestParam(name = "q", required = false) String keyword,
@@ -35,6 +38,7 @@ public class SearchController {
     }
 
     @PostMapping("/tickets/reindex")
+    @PreAuthorize(TravelTicketAuthorities.CAN_REINDEX)
     public ApiResponse<Long> reindexTickets(@RequestHeader("X-Tenant-Id") Long tenantId) {
         return ApiResponse.ok(ticketService.reindexTenant(tenantId));
     }

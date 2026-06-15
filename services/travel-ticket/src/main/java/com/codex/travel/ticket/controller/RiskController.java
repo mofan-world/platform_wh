@@ -2,10 +2,12 @@ package com.codex.travel.ticket.controller;
 
 import com.codex.travel.ticket.common.ApiResponse;
 import com.codex.travel.ticket.common.PageResult;
+import com.codex.travel.ticket.config.TravelTicketAuthorities;
 import com.codex.travel.ticket.dto.RiskEventResponse;
 import com.codex.travel.ticket.enums.TicketStatus;
 import com.codex.travel.ticket.service.TicketService;
 
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -23,6 +25,7 @@ public class RiskController {
     }
 
     @GetMapping("/events")
+    @PreAuthorize(TravelTicketAuthorities.CAN_READ)
     public ApiResponse<PageResult<RiskEventResponse>> events(
             @RequestHeader("X-Tenant-Id") Long tenantId,
             @RequestParam(name = "status", required = false) TicketStatus status,

@@ -8,6 +8,7 @@ import jakarta.servlet.http.HttpServletRequest;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -49,6 +50,14 @@ public class GlobalExceptionHandler {
                 .collect(Collectors.joining("; "));
         operationLogService.recordException(request, HttpStatus.BAD_REQUEST.value(), "VALIDATION_ERROR", ex);
         return ResponseEntity.badRequest().body(ApiResponse.failed("VALIDATION_ERROR", message));
+    }
+
+    @ExceptionHandler(AccessDeniedException.class)
+    public ResponseEntity<ApiResponse<Void>> handleAccessDenied(AccessDeniedException ex, HttpServletRequest request) {
+        operationLogService.recordException(request, HttpStatus.FORBIDDEN.value(), "FORBIDDEN", ex);
+        return ResponseEntity
+                .status(HttpStatus.FORBIDDEN)
+                .body(ApiResponse.failed("FORBIDDEN", "current account does not have permission for this travel ticket action"));
     }
 
     @ExceptionHandler(Exception.class)

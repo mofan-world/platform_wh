@@ -2,10 +2,12 @@ package com.codex.travel.ticket.controller;
 
 import com.codex.travel.ticket.common.ApiResponse;
 import com.codex.travel.ticket.common.PageResult;
+import com.codex.travel.ticket.config.TravelTicketAuthorities;
 import com.codex.travel.ticket.dto.ExceptionLogResponse;
 import com.codex.travel.ticket.dto.OperationLogResponse;
 import com.codex.travel.ticket.service.OperationLogService;
 
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -23,6 +25,7 @@ public class OpsLogController {
     }
 
     @GetMapping("/operations")
+    @PreAuthorize(TravelTicketAuthorities.CAN_READ_OPS)
     public ApiResponse<PageResult<OperationLogResponse>> operationLogs(
             @RequestHeader(name = "X-Tenant-Id", required = false) Long tenantId,
             @RequestParam(name = "page", defaultValue = "0") int page,
@@ -31,6 +34,7 @@ public class OpsLogController {
     }
 
     @GetMapping("/exceptions")
+    @PreAuthorize(TravelTicketAuthorities.CAN_READ_OPS)
     public ApiResponse<PageResult<ExceptionLogResponse>> exceptionLogs(
             @RequestHeader(name = "X-Tenant-Id", required = false) Long tenantId,
             @RequestParam(name = "page", defaultValue = "0") int page,
