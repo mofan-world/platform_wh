@@ -1,8 +1,9 @@
 package com.codex.travel.ticket.config;
 
 import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
+import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Set;
 
 import javax.crypto.SecretKey;
 import javax.crypto.spec.SecretKeySpec;
@@ -69,21 +70,71 @@ public class SecurityConfig {
 
     private Converter<Jwt, AbstractAuthenticationToken> jwtConverter() {
         return jwt -> {
-            List<SimpleGrantedAuthority> authorities = new ArrayList<>();
+            Set<SimpleGrantedAuthority> authorities = new LinkedHashSet<>();
+            Set<String> roleCodes = new LinkedHashSet<>();
             List<String> roles = jwt.getClaimAsStringList("roles");
             if (roles != null) {
                 roles.stream()
-                        .map(role -> role.startsWith("ROLE_") ? role : "ROLE_" + role)
-                        .map(SimpleGrantedAuthority::new)
-                        .forEach(authorities::add);
+                        .map(String::trim)
+                        .filter(role -> !role.isBlank())
+                        .map(role -> role.startsWith("ROLE_") ? role.substring("ROLE_".length()) : role)
+                        .forEach(role -> {
+                            roleCodes.add(role);
+                            authorities.add(new SimpleGrantedAuthority("ROLE_" + role));
+                        });
             }
             List<String> permissions = jwt.getClaimAsStringList("permissions");
             if (permissions != null) {
                 permissions.stream()
+                        .map(String::trim)
+                        .filter(permission -> !permission.isBlank())
                         .map(SimpleGrantedAuthority::new)
                         .forEach(authorities::add);
             }
+            grantTravelPermissions(roleCodes, authorities);
             return new JwtAuthenticationToken(jwt, authorities, jwt.getSubject());
         };
+    }
+
+    private void grantTravelPermissions(
+            Set<String> roleCodes,
+            Set<SimpleGrantedAuthority> authorities) {
+        if (roleCodes.stream().anyMatch(role -> Set.of("ADMIN", "MANAGER", "TRAVEL_ADMIN").contains(role))) {
+            addAuthorities(authorities,
+                    "travel:ticket:read",
+                    "travel:ticket:create",
+                    "travel:ticket:update",
+                    "travel:ticket:delete",
+                    "travel:ticket:approve",
+                    "travel:risk:read",
+                    "travel:search:reindex",
+                    "travel:ops:read");
+        }
+        if (roleCodes.contains("TRAVEL_USER")) {
+            addAuthorities(authorities,
+                    "travel:ticket:read",
+                    "travel:ticket:create",
+                    "travel:ticket:update",
+                    "travel:risk:read");
+        }
+        if (roleCodes.contains("TRAVEL_APPROVER")) {
+            addAuthorities(authorities,
+                    "travel:ticket:read",
+                    "travel:ticket:update",
+                    "travel:ticket:approve",
+                    "travel:risk:read");
+        }
+        if (roleCodes.contains("TRAVEL_AUDITOR")) {
+            addAuthorities(authorities,
+                    "travel:ticket:read",
+                    "travel:risk:read",
+                    "travel:ops:read");
+        }
+    }
+
+    private void addAuthorities(Set<SimpleGrantedAuthority> authorities, String... values) {
+        for (String value : values) {
+            authorities.add(new SimpleGrantedAuthority(value));
+        }
     }
 }
