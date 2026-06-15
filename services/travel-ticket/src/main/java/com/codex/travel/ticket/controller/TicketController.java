@@ -51,7 +51,7 @@ public class TicketController {
     }
 
     @PostMapping
-    @PreAuthorize("hasAnyRole('TRAVEL_USER','travel:ticket:create')")
+    @PreAuthorize("hasRole('TRAVEL_USER')")
     public ResponseEntity<ApiResponse<TicketResponse>> create(
             @RequestHeader("X-Tenant-Id") Long tenantId,
             @Valid @RequestBody CreateTicketRequest request) {
