@@ -9,7 +9,7 @@ import javax.crypto.SecretKey;
 import javax.crypto.spec.SecretKeySpec;
 
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.convert.converter.Converter;
@@ -31,6 +31,7 @@ import org.springframework.security.web.SecurityFilterChain;
 
 @Configuration
 @EnableMethodSecurity
+@EnableConfigurationProperties(AppProperties.class)
 @Slf4j
 public class SecurityConfig {
 
@@ -55,18 +56,11 @@ public class SecurityConfig {
     }
 
     @Bean
-    JwtDecoder jwtDecoder(
-            @Value("${platform.security.jwt.secret}") String secret,
-            @Value("${platform.security.jwt.issuer}") String issuer) {
-        byte[] secretBytes = secret.getBytes(StandardCharsets.UTF_8);
-        if (secretBytes.length < 32) {
-            throw new IllegalStateException("platform.security.jwt.secret must contain at least 32 bytes");
-        }
-        SecretKey key = new SecretKeySpec(secretBytes, "HmacSHA256");
-        NimbusJwtDecoder decoder = NimbusJwtDecoder.withSecretKey(key)
+    JwtDecoder jwtDecoder(AppProperties properties) {
+        NimbusJwtDecoder decoder = NimbusJwtDecoder.withSecretKey(secretKey(properties))
                 .macAlgorithm(MacAlgorithm.HS256)
                 .build();
-        decoder.setJwtValidator(JwtValidators.createDefaultWithIssuer(issuer));
+        decoder.setJwtValidator(JwtValidators.createDefaultWithIssuer(properties.jwt().issuer()));
         return decoder;
     }
 
@@ -144,5 +138,13 @@ public class SecurityConfig {
         for (String value : values) {
             authorities.add(new SimpleGrantedAuthority(value));
         }
+    }
+
+    private SecretKey secretKey(AppProperties properties) {
+        byte[] bytes = properties.jwt().secret().getBytes(StandardCharsets.UTF_8);
+        if (bytes.length < 32) {
+            throw new IllegalStateException("app.jwt.secret must contain at least 32 bytes");
+        }
+        return new SecretKeySpec(bytes, "HmacSHA256");
     }
 }

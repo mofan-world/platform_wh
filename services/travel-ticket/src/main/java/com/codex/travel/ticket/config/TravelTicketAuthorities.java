@@ -13,7 +13,7 @@ public final class TravelTicketAuthorities {
             + "'travel:ops:read'"
             + ")";
 
-    public static final String CAN_CREATE = "hasAnyAuthority('ROLE_ADMIN','ROLE_TRAVEL_ADMIN','ROLE_TRAVEL_USER','travel:ticket:create')";
+    public static final String CAN_CREATE = "hasAnyAuthority('ROLE_ADMIN', 'ROLE_TRAVEL_ADMIN', 'ROLE_TRAVEL_USER', 'travel:ticket:create')";
 
     public static final String CAN_UPDATE = "hasAnyAuthority("
             + "'ROLE_ADMIN',"

@@ -62,6 +62,13 @@ platform:
       issuer: ${JWT_ISSUER:identity-service}
       secret: ${JWT_SECRET:change-this-secret-to-at-least-32-bytes}
 
+app:
+  jwt:
+    issuer: ${JWT_ISSUER:identity-service}
+    secret: ${JWT_SECRET:change-this-secret-to-at-least-32-bytes}
+    access-token-ttl: 30m
+    refresh-token-ttl: 7d
+
 management:
   endpoints:
     web:
