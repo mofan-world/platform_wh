@@ -21,6 +21,7 @@ public class GatewayServer {
 
     private static final Path ISSUE_WEB = Path.of("/app/issue-web").toAbsolutePath().normalize();
     private static final Path TRAVEL_WEB = Path.of("/app/travel-web").toAbsolutePath().normalize();
+    private static final String IDENTITY_API = getenv("IDENTITY_API_BASE", "http://identity-service:8080");
     private static final String ISSUE_API = getenv("ISSUE_API_BASE", "http://issuetracker-end:8080");
     private static final String TRAVEL_API = getenv("TRAVEL_API_BASE", "http://travel-ticket:8090");
     private static final HttpClient CLIENT = HttpClient.newBuilder()
@@ -66,6 +67,10 @@ public class GatewayServer {
                 proxy(exchange, TRAVEL_API, "/api/" + path.substring("/travel-api/".length()));
                 return;
             }
+            if (isIdentityPath(path)) {
+                proxy(exchange, IDENTITY_API, path);
+                return;
+            }
             if (path.startsWith("/api/")) {
                 proxy(exchange, ISSUE_API, path);
                 return;
@@ -79,6 +84,14 @@ public class GatewayServer {
             byte[] body = ("Gateway error: " + error.getMessage()).getBytes();
             send(exchange, 502, "text/plain; charset=utf-8", body);
         }
+    }
+
+    private static boolean isIdentityPath(String path) {
+        return path.startsWith("/api/auth/")
+                || path.equals("/api/admin/users")
+                || path.startsWith("/api/admin/users/")
+                || path.equals("/api/admin/roles")
+                || path.startsWith("/api/users/");
     }
 
     private static void proxy(HttpExchange exchange, String base, String targetPath)

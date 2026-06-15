@@ -82,6 +82,13 @@ onMounted(() => projects.loadProjects())
         </div>
       </div>
 
+      <div class="platform-switcher">
+        <span>统一平台</span>
+        <router-link class="active" to="/tickets">问题跟踪</router-link>
+        <a href="/travel/">出差车票</a>
+        <router-link v-if="auth.hasPermission('user:manage')" to="/admin/users">身份认证</router-link>
+      </div>
+
       <el-menu :default-active="activeMenu" router>
         <el-menu-item index="/tickets">
           <el-icon><Tickets /></el-icon>
@@ -104,11 +111,6 @@ onMounted(() => projects.loadProjects())
           <span>{{ t('nav.projects') }}</span>
         </el-menu-item>
       </el-menu>
-      <a class="platform-module-link" href="/travel/">
-        <el-icon><Tickets /></el-icon>
-        <span>出差车票管理</span>
-      </a>
-
       <div class="sidebar-user">
         <el-avatar>{{ auth.user?.displayName?.slice(0, 1) }}</el-avatar>
         <div class="sidebar-user-info">

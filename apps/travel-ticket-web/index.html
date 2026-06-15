@@ -33,11 +33,16 @@
               <small>{{ currentUser.company }}</small>
             </div>
           </div>
+          <div class="module-switcher">
+            <span>统一平台</span>
+            <button type="button" @click="openIssueTracker">问题跟踪</button>
+            <button type="button" class="active">出差车票</button>
+            <button v-if="canManageIdentity" type="button" @click="openIdentityCenter">身份认证</button>
+          </div>
           <nav>
-            <button @click="openIssueTracker">问题跟踪</button>
             <button :class="{ active: activeSection === 'dashboard' }" @click="switchSection('dashboard')">总览</button>
             <button :class="{ active: activeSection === 'tickets' }" @click="switchSection('tickets')">车票</button>
-            <button :class="{ active: activeSection === 'approvals' }" @click="switchSection('approvals')">审批</button>
+            <button v-if="canApproveTickets" :class="{ active: activeSection === 'approvals' }" @click="switchSection('approvals')">审批</button>
             <button :class="{ active: activeSection === 'risk' }" @click="switchSection('risk')">风控</button>
           </nav>
           <div class="user-box">
@@ -56,10 +61,10 @@
             </div>
             <div class="topbar-actions">
               <button class="ghost-action" @click="reloadData" :disabled="loading">刷新</button>
-              <button class="ghost-action" @click="seedDemoData" :disabled="loading">导入演示数据</button>
-              <button class="ghost-action" @click="reindexSearch" :disabled="loading">重建 ES 索引</button>
+              <button v-if="canCreateTicket" class="ghost-action" @click="seedDemoData" :disabled="loading">导入演示数据</button>
+              <button v-if="canReindexSearch" class="ghost-action" @click="reindexSearch" :disabled="loading">重建 ES 索引</button>
               <button class="ghost-action" @click="exportCsv">导出 CSV</button>
-              <button class="primary-action" @click="openCreateForm">新增车票</button>
+              <button v-if="canCreateTicket" class="primary-action" @click="openCreateForm">新增车票</button>
             </div>
           </header>
 
@@ -159,8 +164,9 @@
                       <td><span class="status" :data-status="ticket.status">{{ ticket.status }}</span></td>
                       <td><span class="risk" :data-risk="ticket.riskLevel">{{ ticket.riskLevel }}</span></td>
                       <td class="row-actions">
-                        <button title="编辑" @click="editTicket(ticket)">编辑</button>
-                        <button class="danger-text" title="删除" @click="removeTicket(ticket)">删除</button>
+                        <button v-if="canEditTickets" title="编辑" @click="editTicket(ticket)">编辑</button>
+                        <button v-if="canDeleteTickets" class="danger-text" title="删除" @click="removeTicket(ticket)">删除</button>
+                        <span v-if="!canEditTickets && !canDeleteTickets" class="muted-action">只读</span>
                       </td>
                     </tr>
                   </tbody>
@@ -199,7 +205,7 @@
                     <span>{{ money(ticket.amount) }}</span>
                   </header>
                   <p>{{ ticket.departureCity }} 到 {{ ticket.arrivalCity }}，{{ ticket.carrierNo }}，{{ ticket.tripPurpose }}</p>
-                  <div class="inline-actions">
+                  <div v-if="canApproveTickets" class="inline-actions">
                     <button @click="updateStatus(ticket, '已通过')">通过</button>
                     <button @click="updateStatus(ticket, '已驳回')">驳回</button>
                     <button @click="updateStatus(ticket, '待补票')">补票</button>

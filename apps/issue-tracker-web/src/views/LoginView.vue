@@ -40,21 +40,21 @@ async function submit() {
   <div class="auth-page">
     <section class="auth-hero">
       <div class="auth-hero-content">
-        <span class="eyebrow light">ISSUE OPERATIONS</span>
-        <h1>让每一个问题<br />都有清晰的归处</h1>
-        <p>从提交、分派、处理到验证关闭，全流程可追踪、可审计。</p>
+        <span class="eyebrow light">PLATFORM IDENTITY</span>
+        <h1>统一身份认证<br />连接所有业务系统</h1>
+        <p>一次登录后可访问问题跟踪、出差车票和后续接入的业务系统，角色权限由身份认证中心统一维护。</p>
         <div class="hero-metrics">
-          <div><strong>全流程</strong><span>状态可见</span></div>
-          <div><strong>RBAC</strong><span>权限隔离</span></div>
-          <div><strong>可扩展</strong><span>面向 20 万用户</span></div>
+          <div><strong>SSO</strong><span>统一登录</span></div>
+          <div><strong>RBAC</strong><span>角色授权</span></div>
+          <div><strong>Nacos</strong><span>微服务接入</span></div>
         </div>
       </div>
     </section>
     <section class="auth-panel">
       <div class="auth-card">
         <span class="eyebrow">WELCOME BACK</span>
-        <h2>登录工作台</h2>
-        <p class="muted">使用你的组织账号继续</p>
+        <h2>登录统一平台</h2>
+        <p class="muted">使用统一身份认证账号继续</p>
         <el-form ref="formRef" :model="form" :rules="rules" label-position="top" @keyup.enter="submit">
           <el-form-item label="用户名" prop="username">
             <el-input v-model="form.username" size="large" placeholder="请输入用户名" />

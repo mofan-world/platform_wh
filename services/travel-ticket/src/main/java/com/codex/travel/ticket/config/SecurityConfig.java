@@ -1,6 +1,7 @@
 package com.codex.travel.ticket.config;
 
 import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
 import java.util.List;
 
 import javax.crypto.SecretKey;
@@ -41,6 +42,20 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/actuator/health/**").permitAll()
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/v1/reports/**")
+                        .hasAnyRole("ADMIN", "TRAVEL_ADMIN", "TRAVEL_USER", "TRAVEL_APPROVER", "TRAVEL_AUDITOR")
+                        .requestMatchers(HttpMethod.GET, "/api/v1/tickets/**", "/api/v1/risk/**", "/api/v1/search/tickets")
+                        .hasAnyRole("ADMIN", "TRAVEL_ADMIN", "TRAVEL_USER", "TRAVEL_APPROVER", "TRAVEL_AUDITOR")
+                        .requestMatchers(HttpMethod.POST, "/api/v1/tickets")
+                        .hasAnyRole("ADMIN", "TRAVEL_ADMIN", "TRAVEL_USER")
+                        .requestMatchers(HttpMethod.PUT, "/api/v1/tickets/**")
+                        .hasAnyRole("ADMIN", "TRAVEL_ADMIN", "TRAVEL_USER", "TRAVEL_APPROVER")
+                        .requestMatchers(HttpMethod.DELETE, "/api/v1/tickets/**")
+                        .hasAnyRole("ADMIN", "TRAVEL_ADMIN")
+                        .requestMatchers(HttpMethod.POST, "/api/v1/approvals/**")
+                        .hasAnyRole("ADMIN", "TRAVEL_ADMIN", "TRAVEL_APPROVER")
+                        .requestMatchers("/api/v1/search/tickets/reindex", "/api/v1/ops/**")
+                        .hasAnyRole("ADMIN", "TRAVEL_ADMIN")
                         .anyRequest().authenticated())
                 .oauth2ResourceServer(oauth -> oauth
                         .jwt(jwt -> jwt
@@ -68,10 +83,20 @@ public class SecurityConfig {
 
     private Converter<Jwt, AbstractAuthenticationToken> jwtConverter() {
         return jwt -> {
+            List<SimpleGrantedAuthority> authorities = new ArrayList<>();
+            List<String> roles = jwt.getClaimAsStringList("roles");
+            if (roles != null) {
+                roles.stream()
+                        .map(role -> role.startsWith("ROLE_") ? role : "ROLE_" + role)
+                        .map(SimpleGrantedAuthority::new)
+                        .forEach(authorities::add);
+            }
             List<String> permissions = jwt.getClaimAsStringList("permissions");
-            var authorities = permissions == null
-                    ? List.<SimpleGrantedAuthority>of()
-                    : permissions.stream().map(SimpleGrantedAuthority::new).toList();
+            if (permissions != null) {
+                permissions.stream()
+                        .map(SimpleGrantedAuthority::new)
+                        .forEach(authorities::add);
+            }
             return new JwtAuthenticationToken(jwt, authorities, jwt.getSubject());
         };
     }

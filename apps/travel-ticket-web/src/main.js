@@ -325,6 +325,16 @@ createApp({
     const showTicketModule = computed(() => isDashboard.value || activeSection.value === "tickets");
     const showApprovalModule = computed(() => isDashboard.value || activeSection.value === "approvals");
     const showRiskModule = computed(() => isDashboard.value || activeSection.value === "risk");
+    const hasRole = (role) => currentUser.value?.roles?.includes(role) || false;
+    const hasAnyRole = (...roles) => roles.some((role) => hasRole(role));
+    const hasPermission = (permission) => currentUser.value?.permissions?.includes(permission) || false;
+    const isTravelAdmin = computed(() => hasAnyRole("ADMIN", "TRAVEL_ADMIN"));
+    const canManageIdentity = computed(() => hasRole("ADMIN") || hasPermission("user:manage"));
+    const canCreateTicket = computed(() => isTravelAdmin.value || hasRole("TRAVEL_USER") || hasPermission("travel:ticket:create"));
+    const canEditTickets = computed(() => isTravelAdmin.value || hasAnyRole("TRAVEL_USER", "TRAVEL_APPROVER") || hasPermission("travel:ticket:update"));
+    const canDeleteTickets = computed(() => isTravelAdmin.value || hasPermission("travel:ticket:delete"));
+    const canApproveTickets = computed(() => isTravelAdmin.value || hasRole("TRAVEL_APPROVER") || hasPermission("travel:ticket:approve"));
+    const canReindexSearch = computed(() => isTravelAdmin.value || hasPermission("travel:search:reindex"));
     const sectionTitle = computed(() => ({
       dashboard: "出差车票归集、审批与核销",
       tickets: "车票记录管理",
@@ -409,6 +419,9 @@ createApp({
         if (response.status === 401) {
           clearPlatformSession();
           redirectToLogin();
+        }
+        if (response.status === 403) {
+          throw new Error("当前账号没有该车票操作权限，请在身份认证中心分配车票角色");
         }
         throw new Error(payload?.message || `请求失败：${response.status}`);
       }
@@ -620,7 +633,15 @@ createApp({
       window.location.assign("/");
     }
 
+    function openIdentityCenter() {
+      window.location.assign("/admin/users");
+    }
+
     function switchSection(section) {
+      if (section === "approvals" && !canApproveTickets.value) {
+        showMessage("当前账号没有车票审批权限");
+        return;
+      }
       activeSection.value = section;
     }
 
@@ -653,6 +674,10 @@ createApp({
     }
 
     function openCreateForm() {
+      if (!canCreateTicket.value) {
+        showMessage("当前账号没有新增车票权限");
+        return;
+      }
       resetTicketForm();
       showTicketForm.value = true;
     }
@@ -667,6 +692,14 @@ createApp({
     }
 
     async function saveTicket() {
+      if (editingId.value && !canEditTickets.value) {
+        showMessage("当前账号没有编辑车票权限");
+        return;
+      }
+      if (!editingId.value && !canCreateTicket.value) {
+        showMessage("当前账号没有新增车票权限");
+        return;
+      }
       await runWithLoading(async () => {
         const payload = toPayload(ticketForm);
         if (editingId.value) {
@@ -689,6 +722,10 @@ createApp({
     }
 
     async function updateStatus(ticket, status) {
+      if (!canApproveTickets.value) {
+        showMessage("当前账号没有车票审批权限");
+        return;
+      }
       const action = {
         已通过: "approve",
         已驳回: "reject",
@@ -710,6 +747,10 @@ createApp({
     }
 
     function removeTicket(ticket) {
+      if (!canDeleteTickets.value) {
+        showMessage("当前账号没有删除车票权限");
+        return;
+      }
       deleteTarget.value = ticket;
     }
 
@@ -731,6 +772,10 @@ createApp({
     }
 
     async function seedDemoData() {
+      if (!canCreateTicket.value) {
+        showMessage("当前账号没有新增车票权限");
+        return;
+      }
       await runWithLoading(async () => {
         let created = 0;
         for (const ticket of sampleTickets) {
@@ -752,6 +797,10 @@ createApp({
     }
 
     async function reindexSearch() {
+      if (!canReindexSearch.value) {
+        showMessage("当前账号没有重建索引权限");
+        return;
+      }
       await runWithLoading(async () => {
         const count = await api("/travel-api/v1/search/tickets/reindex", { method: "POST" });
         showMessage(`已重建 ${count} 条 ES 索引`);
@@ -802,6 +851,12 @@ createApp({
     return {
       apiBase,
       activeSection,
+      canApproveTickets,
+      canCreateTicket,
+      canDeleteTickets,
+      canEditTickets,
+      canManageIdentity,
+      canReindexSearch,
       currentUser,
       cancelDelete,
       clearFilters,
@@ -821,6 +876,7 @@ createApp({
       logout,
       metrics,
       money,
+      openIdentityCenter,
       openIssueTracker,
       openCreateForm,
       pendingPageCount,
