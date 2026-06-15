@@ -8,6 +8,7 @@ import java.util.Set;
 import javax.crypto.SecretKey;
 import javax.crypto.spec.SecretKeySpec;
 
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -30,6 +31,7 @@ import org.springframework.security.web.SecurityFilterChain;
 
 @Configuration
 @EnableMethodSecurity
+@Slf4j
 public class SecurityConfig {
 
     @Bean
@@ -73,6 +75,7 @@ public class SecurityConfig {
             Set<SimpleGrantedAuthority> authorities = new LinkedHashSet<>();
             Set<String> roleCodes = new LinkedHashSet<>();
             List<String> roles = jwt.getClaimAsStringList("roles");
+            log.info("roles: [{}]", roles);
             if (roles != null) {
                 roles.stream()
                         .map(String::trim)
@@ -83,6 +86,8 @@ public class SecurityConfig {
                             authorities.add(new SimpleGrantedAuthority("ROLE_" + role));
                         });
             }
+            log.info("roleCodes: [{}]", roleCodes);
+            log.info("authorities: [{}]", authorities);
             List<String> permissions = jwt.getClaimAsStringList("permissions");
             if (permissions != null) {
                 permissions.stream()
