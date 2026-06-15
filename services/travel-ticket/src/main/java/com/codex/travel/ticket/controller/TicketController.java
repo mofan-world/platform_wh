@@ -25,6 +25,8 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import static org.springframework.security.authorization.AuthorityAuthorizationManager.hasAnyAuthority;
+
 @RestController
 @RequestMapping("/api/v1/tickets")
 public class TicketController {
@@ -49,7 +51,7 @@ public class TicketController {
     }
 
     @PostMapping
-    @PreAuthorize(TravelTicketAuthorities.CAN_CREATE)
+    @PreAuthorize("hasAnyAuthority('ROLE_ADMIN','ROLE_TRAVEL_ADMIN','ROLE_TRAVEL_USER','travel:ticket:create')")
     public ResponseEntity<ApiResponse<TicketResponse>> create(
             @RequestHeader("X-Tenant-Id") Long tenantId,
             @Valid @RequestBody CreateTicketRequest request) {
