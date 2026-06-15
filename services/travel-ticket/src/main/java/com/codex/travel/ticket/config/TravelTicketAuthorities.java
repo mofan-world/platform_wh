@@ -2,7 +2,7 @@ package com.codex.travel.ticket.config;
 
 public final class TravelTicketAuthorities {
 
-    public static final String CAN_READ = "hasAnyAuthority("
+    public static final String CAN_READ = "hasAnyRole("
             + "'ROLE_ADMIN',"
             + "'ROLE_TRAVEL_ADMIN',"
             + "'ROLE_TRAVEL_USER',"
@@ -13,14 +13,14 @@ public final class TravelTicketAuthorities {
             + "'travel:ops:read'"
             + ")";
 
-    public static final String CAN_CREATE = "hasAnyAuthority("
+    public static final String CAN_CREATE = "hasAnyRole("
             + "'ROLE_ADMIN',"
             + "'ROLE_TRAVEL_ADMIN',"
             + "'ROLE_TRAVEL_USER',"
             + "'travel:ticket:create'"
             + ")";
 
-    public static final String CAN_UPDATE = "hasAnyAuthority("
+    public static final String CAN_UPDATE = "hasAnyRole("
             + "'ROLE_ADMIN',"
             + "'ROLE_TRAVEL_ADMIN',"
             + "'ROLE_TRAVEL_USER',"
@@ -28,26 +28,26 @@ public final class TravelTicketAuthorities {
             + "'travel:ticket:update'"
             + ")";
 
-    public static final String CAN_DELETE = "hasAnyAuthority("
+    public static final String CAN_DELETE = "hasAnyRole("
             + "'ROLE_ADMIN',"
             + "'ROLE_TRAVEL_ADMIN',"
             + "'travel:ticket:delete'"
             + ")";
 
-    public static final String CAN_APPROVE = "hasAnyAuthority("
+    public static final String CAN_APPROVE = "hasAnyRole("
             + "'ROLE_ADMIN',"
             + "'ROLE_TRAVEL_ADMIN',"
             + "'ROLE_TRAVEL_APPROVER',"
             + "'travel:ticket:approve'"
             + ")";
 
-    public static final String CAN_REINDEX = "hasAnyAuthority("
+    public static final String CAN_REINDEX = "hasAnyRole("
             + "'ROLE_ADMIN',"
             + "'ROLE_TRAVEL_ADMIN',"
             + "'travel:search:reindex'"
             + ")";
 
-    public static final String CAN_READ_OPS = "hasAnyAuthority("
+    public static final String CAN_READ_OPS = "hasAnyRole("
             + "'ROLE_ADMIN',"
             + "'ROLE_TRAVEL_ADMIN',"
             + "'travel:ops:read'"
