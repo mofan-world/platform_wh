@@ -1,0 +1,156 @@
+name: unified-operations-platform
+
+services:
+  postgres:
+    image: postgres:16
+    environment:
+      POSTGRES_DB: platform_identity
+      POSTGRES_USER: platform
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-platform}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./infra/postgres/init:/docker-entrypoint-initdb.d:ro
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U platform -d platform_identity"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+    restart: unless-stopped
+
+  redis:
+    image: redis:7
+    command: ["redis-server", "--appendonly", "yes"]
+    volumes:
+      - redis_data:/data
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+    restart: unless-stopped
+
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:8.13.4
+    environment:
+      discovery.type: single-node
+      xpack.security.enabled: "false"
+      ES_JAVA_OPTS: "-Xms512m -Xmx512m"
+    volumes:
+      - elasticsearch_data:/usr/share/elasticsearch/data
+    ports:
+      - "9200:9200"
+    healthcheck:
+      test: ["CMD-SHELL", "curl -fs http://localhost:9200/_cluster/health || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 30
+    restart: unless-stopped
+
+  nacos:
+    image: nacos/nacos-server:v3.2.2
+    environment:
+      MODE: standalone
+      NACOS_AUTH_ENABLE: "false"
+      JVM_XMS: 256m
+      JVM_XMX: 512m
+      NACOS_AUTH_TOKEN: "U2VjcmV0S2V5MDEyMzQ1Njc4OTAxMjM0NTY3ODkwMTIzNDU2Nzg5MDEyMzQ1Njc4OTAxMjM0NTY3ODkwMTIzNDU2Nzg5Cg=="
+      NACOS_AUTH_IDENTITY_KEY: serverIdentity
+      NACOS_AUTH_IDENTITY_VALUE: security
+    volumes:
+      - nacos_data:/home/appuser/data
+      - nacos_logs:/home/appuser/logs
+    ports:
+      - "8081:8080"
+      - "8848:8848"
+      - "9848:9848"
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:8848/nacos/v1/ns/operator/metrics || exit 1"]
+      start_period: 15s
+      interval: 15s
+      timeout: 5s
+      retries: 20
+    restart: unless-stopped
+
+  issuetracker-end:
+    build:
+      context: ./services/issue-tracker
+    environment:
+      DB_URL: jdbc:postgresql://postgres:5432/platform_identity
+      DB_USERNAME: platform
+      DB_PASSWORD: ${POSTGRES_PASSWORD:-platform}
+      REDIS_HOST: redis
+      ELASTICSEARCH_URIS: http://elasticsearch:9200
+      NACOS_SERVER_ADDR: nacos:8848
+      NACOS_ENABLED: "true"
+      JWT_SECRET: ${JWT_SECRET:-replace-with-a-production-secret-at-least-32-bytes}
+      ADMIN_PASSWORD: ${ADMIN_PASSWORD:-Admin@123456}
+      CORS_ALLOWED_ORIGINS: http://localhost
+      ATTACHMENT_STORAGE_ROOT: /home/appuser/uploads/attachments
+    volumes:
+      - attachment_data:/home/appuser/uploads/attachments
+    ports:
+      - "8082:8080"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      elasticsearch:
+        condition: service_healthy
+      nacos:
+        condition: service_healthy
+    restart: unless-stopped
+
+  travel-ticket:
+    build:
+      context: ./services/travel-ticket
+      dockerfile: Dockerfile
+    environment:
+      SERVER_PORT: 8090
+      DB_URL: jdbc:postgresql://postgres:5432/platform_travel
+      DB_USERNAME: platform
+      DB_PASSWORD: ${POSTGRES_PASSWORD:-platform}
+      REDIS_HOST: redis
+      REDIS_DATABASE: 2
+      ELASTICSEARCH_URIS: http://elasticsearch:9200
+      NACOS_SERVER_ADDR: nacos:8848
+      NACOS_ENABLED: "true"
+      JWT_SECRET: ${JWT_SECRET:-replace-with-a-production-secret-at-least-32-bytes}
+      JWT_ISSUER: issue-tracker
+    ports:
+      - "8090:8090"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      elasticsearch:
+        condition: service_healthy
+      nacos:
+        condition: service_healthy
+    restart: unless-stopped
+
+  gateway:
+    build:
+      context: .
+      dockerfile: gateway/Dockerfile
+    depends_on:
+      issuetracker-end:
+        condition: service_started
+      travel-ticket:
+        condition: service_started
+    ports:
+      - "80:80"
+    restart: unless-stopped
+
+volumes:
+  postgres_data:
+  redis_data:
+  elasticsearch_data:
+  nacos_data:
+  nacos_logs:
+  attachment_data:

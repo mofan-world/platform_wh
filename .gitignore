@@ -1,0 +1,10 @@
+.env
+**/target/
+**/node_modules/
+**/dist/
+**/.m2/
+work/
+*.log
+*.pid
+.idea/
+.vscode/

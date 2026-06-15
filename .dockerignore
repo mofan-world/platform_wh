@@ -1,0 +1,10 @@
+**
+!gateway/
+!gateway/**
+!apps/
+!apps/issue-tracker-web/
+!apps/issue-tracker-web/dist/
+!apps/issue-tracker-web/dist/**
+!apps/travel-ticket-web/
+!apps/travel-ticket-web/dist/
+!apps/travel-ticket-web/dist/**

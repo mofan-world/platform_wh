@@ -1,0 +1,4 @@
+**
+!Dockerfile
+!target/
+!target/travel-ticket-service-0.1.0-SNAPSHOT.jar
