@@ -11,6 +11,27 @@ const secret = process.env.JWT_SECRET || "replace-with-a-production-secret-at-le
 
 const services = [
   {
+    name: "identity-service",
+    command: "java",
+    args: ["-jar", join(root, "services", "identity-service", "target", "identity-service-1.0.0.jar")],
+    cwd: join(root, "services", "identity-service"),
+    env: {
+      SERVER_PORT: "8083",
+      DB_URL: "jdbc:postgresql://127.0.0.1:5432/platform_identity",
+      DB_USERNAME: "platform",
+      DB_PASSWORD: process.env.POSTGRES_PASSWORD || "platform",
+      REDIS_HOST: "127.0.0.1",
+      REDIS_DATABASE: "0",
+      NACOS_SERVER_ADDR: "127.0.0.1:8848",
+      NACOS_ENABLED: "true",
+      JWT_ISSUER: "identity-service",
+      JWT_SECRET: secret,
+      ADMIN_PASSWORD: process.env.ADMIN_PASSWORD || "Admin@123456",
+      CORS_ALLOWED_ORIGINS: "http://127.0.0.1:8000,http://localhost:8000",
+      SPRING_CLOUD_NACOS_CONFIG_IMPORT_CHECK_ENABLED: "false",
+    },
+  },
+  {
     name: "issue-service",
     command: "java",
     args: ["-jar", join(root, "services", "issue-tracker", "target", "issue-tracker-1.0.0.jar")],
@@ -25,7 +46,9 @@ const services = [
       ELASTICSEARCH_URIS: "http://127.0.0.1:9200",
       NACOS_SERVER_ADDR: "127.0.0.1:8848",
       NACOS_ENABLED: "true",
+      JWT_ISSUER: "identity-service",
       JWT_SECRET: secret,
+      SPRING_FLYWAY_ENABLED: "false",
       ADMIN_PASSWORD: process.env.ADMIN_PASSWORD || "Admin@123456",
       CORS_ALLOWED_ORIGINS: "http://127.0.0.1:8000,http://localhost:8000",
       ATTACHMENT_STORAGE_ROOT: attachmentDir,
@@ -47,7 +70,7 @@ const services = [
       ELASTICSEARCH_URIS: "http://127.0.0.1:9200",
       NACOS_SERVER_ADDR: "127.0.0.1:8848",
       NACOS_ENABLED: "true",
-      JWT_ISSUER: "issue-tracker",
+      JWT_ISSUER: "identity-service",
       JWT_SECRET: secret,
       SPRING_CLOUD_NACOS_CONFIG_IMPORT_CHECK_ENABLED: "false",
     },
@@ -60,6 +83,9 @@ const services = [
     env: {
       PLATFORM_HOST: "127.0.0.1",
       PLATFORM_PORT: "8000",
+      IDENTITY_SERVICE_PORT: "8083",
+      ISSUE_SERVICE_PORT: "8082",
+      TRAVEL_SERVICE_PORT: "8090",
     },
   },
 ];

@@ -59,7 +59,7 @@ spring:
 platform:
   security:
     jwt:
-      issuer: ${JWT_ISSUER:issue-tracker}
+      issuer: ${JWT_ISSUER:identity-service}
       secret: ${JWT_SECRET:change-this-secret-to-at-least-32-bytes}
 
 management:

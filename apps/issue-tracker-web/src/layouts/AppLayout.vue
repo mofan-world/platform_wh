@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed, onMounted, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { Tickets, Plus, User, SwitchButton, Collection, FolderOpened, Fold, Expand } from '@element-plus/icons-vue'
+import { Tickets, Plus, User, SwitchButton, Collection, FolderOpened, Fold, Expand, ArrowDown } from '@element-plus/icons-vue'
 import { useAuthStore } from '@/stores/auth'
 import { useProjectStore } from '@/stores/project'
 import { setAppLocale, useAppI18n } from '@/i18n'
@@ -73,8 +73,9 @@ function toggleSidebar() {
   localStorage.setItem('platform-sidebar-collapsed', String(sidebarCollapsed.value))
 }
 
-function switchLanguage() {
-  setAppLocale(locale.value === 'en' ? 'zh-CN' : 'en')
+function changeLanguage(command: string | number | object) {
+  const nextLocale = command === 'en' ? 'en' : 'zh-CN'
+  setAppLocale(nextLocale)
 }
 
 async function changeProject(projectId: number) {
@@ -104,7 +105,18 @@ onMounted(() => projects.loadProjects())
         </router-link>
       </nav>
       <div class="platform-user">
-        <el-button text class="language-toggle" @click="switchLanguage">{{ t('app.language') }}</el-button>
+        <el-dropdown class="language-dropdown topbar-language" trigger="click" @command="changeLanguage">
+          <el-button text class="language-toggle">
+            {{ locale === 'en' ? 'English' : '中文' }}
+            <el-icon class="el-icon--right"><ArrowDown /></el-icon>
+          </el-button>
+          <template #dropdown>
+            <el-dropdown-menu>
+              <el-dropdown-item command="zh-CN" :disabled="locale === 'zh-CN'">中文</el-dropdown-item>
+              <el-dropdown-item command="en" :disabled="locale === 'en'">English</el-dropdown-item>
+            </el-dropdown-menu>
+          </template>
+        </el-dropdown>
         <span class="online-dot"></span>
         <el-avatar :size="30">{{ auth.user?.displayName?.slice(0, 1) }}</el-avatar>
         <div class="platform-user-info">
@@ -185,7 +197,6 @@ onMounted(() => projects.loadProjects())
               :value="project.id"
             />
           </el-select>
-          <span class="topbar-date">{{ new Date().toLocaleDateString(locale === 'en' ? 'en-US' : 'zh-CN') }}</span>
         </div>
       </header>
       <el-tabs

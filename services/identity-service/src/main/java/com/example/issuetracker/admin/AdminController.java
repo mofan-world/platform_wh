@@ -7,7 +7,7 @@ import com.example.issuetracker.admin.AdminDtos.UpdateEnabledRequest;
 import com.example.issuetracker.admin.AdminDtos.UpdateRolesRequest;
 import com.example.issuetracker.admin.AdminDtos.UserOption;
 import com.example.issuetracker.admin.AdminDtos.UserView;
-import com.example.issuetracker.ticket.TicketDtos.PageResult;
+import com.example.issuetracker.common.PageResult;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;

@@ -1,7 +1,5 @@
 package com.example.issuetracker.config;
 
-import com.example.issuetracker.admin.AdminDtos.RoleView;
-import com.example.issuetracker.auth.AuthDtos.UserProfile;
 import org.junit.jupiter.api.Test;
 import org.springframework.cache.Cache;
 import org.springframework.data.redis.serializer.GenericJackson2JsonRedisSerializer;
@@ -16,11 +14,24 @@ import static org.mockito.Mockito.when;
 
 class RedisConfigTest {
 
+    record CachedRoleView(Long id, String code, String name, List<String> permissions) {
+    }
+
+    record CachedUserProfile(
+            Long id,
+            String username,
+            String email,
+            String displayName,
+            List<String> roles,
+            List<String> permissions
+    ) {
+    }
+
     @Test
     void cachedRoleViewsRetainTheirRuntimeType() {
         GenericJackson2JsonRedisSerializer serializer = RedisConfig.redisSerializer();
-        List<RoleView> roles = List.of(
-                new RoleView(1L, "TESTER", "测试人员", List.of("ticket:verify"))
+        List<CachedRoleView> roles = List.of(
+                new CachedRoleView(1L, "TESTER", "测试人员", List.of("ticket:verify"))
         );
 
         Object restored = serializer.deserialize(serializer.serialize(roles));
@@ -28,13 +39,13 @@ class RedisConfigTest {
         assertThat(restored).isInstanceOf(List.class);
         assertThat((List<?>) restored)
                 .singleElement()
-                .isInstanceOf(RoleView.class);
+                .isInstanceOf(CachedRoleView.class);
     }
 
     @Test
     void cachedUserProfileRetainsItsRuntimeType() {
         GenericJackson2JsonRedisSerializer serializer = RedisConfig.redisSerializer();
-        UserProfile profile = new UserProfile(
+        CachedUserProfile profile = new CachedUserProfile(
                 7L,
                 "developer",
                 "developer@example.com",
@@ -46,7 +57,7 @@ class RedisConfigTest {
         Object restored = serializer.deserialize(serializer.serialize(profile));
 
         assertThat(restored)
-                .isInstanceOf(UserProfile.class)
+                .isInstanceOf(CachedUserProfile.class)
                 .isEqualTo(profile);
     }
 

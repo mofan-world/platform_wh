@@ -9,6 +9,9 @@ const issueRoot = join(root, "apps", "issue-tracker-web", "dist");
 const travelRoot = join(root, "apps", "travel-ticket-web", "dist");
 const host = process.env.PLATFORM_HOST || "127.0.0.1";
 const port = Number(process.env.PLATFORM_PORT || 8000);
+const identityPort = Number(process.env.IDENTITY_SERVICE_PORT || 8083);
+const issuePort = Number(process.env.ISSUE_SERVICE_PORT || 8082);
+const travelPort = Number(process.env.TRAVEL_SERVICE_PORT || 8090);
 
 const contentTypes = new Map([
   [".css", "text/css; charset=utf-8"],
@@ -80,14 +83,26 @@ async function serveStatic(response, base, pathname, fallbackToIndex) {
   createReadStream(filePath).pipe(response);
 }
 
+function isIdentityPath(pathname) {
+  return pathname.startsWith("/api/auth/")
+    || pathname === "/api/admin/users"
+    || pathname.startsWith("/api/admin/users/")
+    || pathname === "/api/admin/roles"
+    || pathname.startsWith("/api/users/");
+}
+
 createServer(async (request, response) => {
   const url = new URL(request.url || "/", `http://${request.headers.host || `${host}:${port}`}`);
   if (url.pathname.startsWith("/travel-api/")) {
-    proxy(request, response, 8090, `/api/${url.pathname.slice("/travel-api/".length)}${url.search}`);
+    proxy(request, response, travelPort, `/api/${url.pathname.slice("/travel-api/".length)}${url.search}`);
+    return;
+  }
+  if (isIdentityPath(url.pathname)) {
+    proxy(request, response, identityPort, `${url.pathname}${url.search}`);
     return;
   }
   if (url.pathname.startsWith("/api/")) {
-    proxy(request, response, 8082, `${url.pathname}${url.search}`);
+    proxy(request, response, issuePort, `${url.pathname}${url.search}`);
     return;
   }
   if (url.pathname === "/travel") {

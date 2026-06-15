@@ -37,6 +37,10 @@ a {
   top: 18px;
   right: 24px;
   z-index: 1001;
+}
+
+.language-switcher .el-button,
+.language-dropdown .el-button {
   color: var(--primary);
   font-weight: 700;
 }
@@ -118,6 +122,10 @@ h1, h2, p {
 }
 
 .platform-user .el-button {
+  color: #fff;
+}
+
+.platform-user .language-dropdown .el-button {
   color: #fff;
 }
 
@@ -367,7 +375,6 @@ h1, h2, p {
   color: #f4b34f;
 }
 
-.topbar-date,
 .muted {
   color: var(--muted);
 }

@@ -780,10 +780,6 @@ createApp({
       document.documentElement.lang = locale.value;
     }
 
-    function toggleLocale() {
-      setLocale(locale.value === "en" ? "zh-CN" : "en");
-    }
-
     function toggleSidebar() {
       sidebarCollapsed.value = !sidebarCollapsed.value;
       localStorage.setItem("platform-sidebar-collapsed", String(sidebarCollapsed.value));
@@ -819,13 +815,6 @@ createApp({
       approvals: t("section.approvalsTitle"),
       risk: t("section.riskTitle"),
     }[activeSection.value]));
-    const sectionHint = computed(() => ({
-      dashboard: format("section.dashboardHint", { tenantId: currentUser.value?.tenantId || "-" }),
-      tickets: t("section.ticketsHint"),
-      approvals: t("section.approvalsHint"),
-      risk: t("section.riskHint"),
-    }[activeSection.value]));
-
     const cities = cityOptions;
 
     const filteredTickets = computed(() => {
@@ -1378,8 +1367,8 @@ createApp({
       riskTickets,
       saveTicket,
       seedDemoData,
-      sectionHint,
       sectionTitle,
+      setLocale,
       showApprovalModule,
       showRiskModule,
       showTicketForm,
@@ -1401,7 +1390,6 @@ createApp({
       statusText,
       t,
       ticketTypeText,
-      toggleLocale,
       toggleSidebar,
       riskText,
     };

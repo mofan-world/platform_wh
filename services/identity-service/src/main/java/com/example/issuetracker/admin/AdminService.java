@@ -14,8 +14,8 @@ import com.example.issuetracker.domain.User;
 import com.example.issuetracker.repository.RoleRepository;
 import com.example.issuetracker.repository.UserRepository;
 import com.example.issuetracker.security.CurrentUser;
-import com.example.issuetracker.ticket.TicketDtos.PageResult;
-import com.example.issuetracker.project.ProjectService;
+import com.example.issuetracker.common.PageResult;
+import com.example.issuetracker.project.DefaultProjectMembershipService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.PageRequest;
@@ -38,7 +38,7 @@ public class AdminService {
     private final RoleRepository roleRepository;
     private final CurrentUser currentUser;
     private final PasswordEncoder passwordEncoder;
-    private final ProjectService projectService;
+    private final DefaultProjectMembershipService defaultProjectMembershipService;
 
     @Transactional(readOnly = true)
     public PageResult<UserView> listUsers(String keyword, int page, int size) {
@@ -76,7 +76,7 @@ public class AdminService {
         user.setEnabled(request.enabled());
         user.setRoles(requireRoles(request.roleIds()));
         userRepository.save(user);
-        projectService.addToDefaultProject(user);
+        defaultProjectMembershipService.addToDefaultProject(user);
         return toUserView(user);
     }
 

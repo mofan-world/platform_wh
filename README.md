@@ -59,6 +59,9 @@ Copy-Item .env.example .env
 Set-Location services\issue-tracker
 mvn.cmd -s .mvn\settings.xml -DskipTests package
 
+Set-Location ..\identity-service
+mvn.cmd -s .mvn\settings.xml -DskipTests package
+
 Set-Location ..\travel-ticket
 mvn.cmd -s .mvn\settings.xml -DskipTests package
 

@@ -2,6 +2,7 @@
 import { computed, reactive, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { ElMessage, type FormInstance, type FormRules } from 'element-plus'
+import { ArrowDown } from '@element-plus/icons-vue'
 import { useAuthStore } from '@/stores/auth'
 import { errorMessage } from '@/api/http'
 import { setAppLocale, useAppI18n } from '@/i18n'
@@ -43,8 +44,9 @@ const rules = computed<FormRules>(() => ({
   }],
 }))
 
-function switchLanguage() {
-  setAppLocale(locale.value === 'en' ? 'zh-CN' : 'en')
+function changeLanguage(command: string | number | object) {
+  const nextLocale = command === 'en' ? 'en' : 'zh-CN'
+  setAppLocale(nextLocale)
 }
 
 async function submit() {
@@ -69,7 +71,18 @@ async function submit() {
 
 <template>
   <div class="auth-page">
-    <el-button class="language-switcher" text @click="switchLanguage">{{ t('app.language') }}</el-button>
+    <el-dropdown class="language-switcher language-dropdown" trigger="click" @command="changeLanguage">
+      <el-button text class="language-toggle">
+        {{ locale === 'en' ? 'English' : '中文' }}
+        <el-icon class="el-icon--right"><ArrowDown /></el-icon>
+      </el-button>
+      <template #dropdown>
+        <el-dropdown-menu>
+          <el-dropdown-item command="zh-CN" :disabled="locale === 'zh-CN'">中文</el-dropdown-item>
+          <el-dropdown-item command="en" :disabled="locale === 'en'">English</el-dropdown-item>
+        </el-dropdown-menu>
+      </template>
+    </el-dropdown>
     <section class="auth-hero register-hero">
       <div class="auth-hero-content">
         <span class="eyebrow light">{{ t('auth.registerEyebrow') }}</span>
