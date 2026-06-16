@@ -60,6 +60,10 @@ mvn.cmd -s .mvn\settings.xml -DskipTests package
 Set-Location ..\identity-service
 mvn.cmd -s .mvn\settings.xml -DskipTests package
 
+Set-Location ..\..\apps\identity-web
+npm.cmd ci
+npm.cmd run build
+
 Set-Location ..\..\apps\issue-tracker-web
 npm.cmd ci
 npm.cmd run build
