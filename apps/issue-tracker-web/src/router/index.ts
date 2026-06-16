@@ -31,11 +31,6 @@ const routes: RouteRecordRaw[] = [
         meta: { titleKey: 'nav.ticketDetail', permission: 'ticket:read:own' },
       },
       {
-        path: 'admin/users',
-        component: () => import('@/views/UserManagementView.vue'),
-        meta: { titleKey: 'nav.users', permission: 'user:manage' },
-      },
-      {
         path: 'admin/identity',
         component: () => import('@/views/IdentityManagementView.vue'),
         meta: { titleKey: 'nav.identityConfig', permission: 'identity:manage' },
