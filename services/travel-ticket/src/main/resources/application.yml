@@ -31,7 +31,7 @@ spring:
   elasticsearch:
     uris: ${ELASTICSEARCH_URIS:http://localhost:9200}
   flyway:
-    enabled: true
+    enabled: ${SPRING_FLYWAY_ENABLED:false}
     locations: classpath:db/migration
     baseline-on-migrate: true
   jpa:
@@ -45,6 +45,8 @@ spring:
   cache:
     type: redis
   cloud:
+    compatibility-verifier:
+      enabled: ${SPRING_CLOUD_COMPATIBILITY_VERIFIER_ENABLED:false}
     nacos:
       config:
         import-check:

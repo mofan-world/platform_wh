@@ -87,6 +87,7 @@ services:
       REDIS_DATABASE: 0
       NACOS_SERVER_ADDR: nacos:8848
       NACOS_ENABLED: "true"
+      SPRING_CLOUD_COMPATIBILITY_VERIFIER_ENABLED: "false"
       JWT_ISSUER: identity-service
       JWT_SECRET: ${JWT_SECRET:-replace-with-a-production-secret-at-least-32-bytes}
       ADMIN_PASSWORD: ${ADMIN_PASSWORD:-Admin@123456}
@@ -115,6 +116,7 @@ services:
       ELASTICSEARCH_URIS: http://elasticsearch:9200
       NACOS_SERVER_ADDR: nacos:8848
       NACOS_ENABLED: "true"
+      SPRING_CLOUD_COMPATIBILITY_VERIFIER_ENABLED: "false"
       JWT_ISSUER: identity-service
       JWT_SECRET: ${JWT_SECRET:-replace-with-a-production-secret-at-least-32-bytes}
       SPRING_FLYWAY_ENABLED: "false"
@@ -152,8 +154,10 @@ services:
       ELASTICSEARCH_URIS: http://elasticsearch:9200
       NACOS_SERVER_ADDR: nacos:8848
       NACOS_ENABLED: "true"
+      SPRING_CLOUD_COMPATIBILITY_VERIFIER_ENABLED: "false"
       JWT_SECRET: ${JWT_SECRET:-replace-with-a-production-secret-at-least-32-bytes}
       JWT_ISSUER: identity-service
+      SPRING_FLYWAY_ENABLED: "false"
     ports:
       - "8090:8090"
     depends_on:

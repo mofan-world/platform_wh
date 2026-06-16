@@ -923,16 +923,21 @@ createApp({
       return true;
     }
 
+    async function ensureFreshSession() {
+      if (await refreshPlatformSession()) {
+        return true;
+      }
+      clearPlatformSession();
+      redirectToLogin();
+      return false;
+    }
+
     async function bootstrapSession() {
       if (!currentUser.value) {
         redirectToLogin();
         return;
       }
-      if (!await refreshPlatformSession()) {
-        clearPlatformSession();
-        redirectToLogin();
-        return;
-      }
+      if (!await ensureFreshSession()) return;
       await reloadData();
     }
 
@@ -1160,7 +1165,8 @@ createApp({
       editingId.value = "";
     }
 
-    function openCreateForm() {
+    async function openCreateForm() {
+      if (!await ensureFreshSession()) return;
       if (!canCreateTicket.value) {
         showMessage(t("message.noCreatePermission"));
         return;
@@ -1179,6 +1185,7 @@ createApp({
     }
 
     async function saveTicket() {
+      if (!await ensureFreshSession()) return;
       if (editingId.value && !canEditTickets.value) {
         showMessage(t("message.noEditPermission"));
         return;
@@ -1209,6 +1216,7 @@ createApp({
     }
 
     async function updateStatus(ticket, status) {
+      if (!await ensureFreshSession()) return;
       if (!canApproveTickets.value) {
         showMessage(t("message.noApprovePermission"));
         return;
@@ -1233,7 +1241,8 @@ createApp({
       }).catch((error) => showMessage(error.message));
     }
 
-    function removeTicket(ticket) {
+    async function removeTicket(ticket) {
+      if (!await ensureFreshSession()) return;
       if (!canDeleteTickets.value) {
         showMessage(t("message.noDeletePermission"));
         return;
@@ -1246,6 +1255,7 @@ createApp({
     }
 
     async function confirmRemoveTicket() {
+      if (!await ensureFreshSession()) return;
       const ticket = deleteTarget.value;
       if (!ticket) {
         return;
@@ -1259,6 +1269,7 @@ createApp({
     }
 
     async function seedDemoData() {
+      if (!await ensureFreshSession()) return;
       if (!canCreateTicket.value) {
         showMessage(t("message.noCreatePermission"));
         return;
@@ -1284,6 +1295,7 @@ createApp({
     }
 
     async function reindexSearch() {
+      if (!await ensureFreshSession()) return;
       if (!canReindexSearch.value) {
         showMessage(t("message.noReindexPermission"));
         return;
