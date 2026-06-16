@@ -74,7 +74,6 @@ function changeLanguage(command: string | number | object) {
       </div>
       <nav class="system-switcher" :aria-label="t('platform.switchSystem')">
         <a href="/tickets">{{ t('platform.issue') }}</a>
-        <a href="/travel/">{{ t('platform.travel') }}</a>
         <router-link class="active" to="/admin/users">{{ t('platform.identity') }}</router-link>
       </nav>
       <div class="platform-user">
