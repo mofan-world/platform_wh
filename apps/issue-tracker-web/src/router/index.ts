@@ -55,6 +55,11 @@ const routes: RouteRecordRaw[] = [
         component: () => import('@/views/ProjectManagementView.vue'),
         meta: { titleKey: 'nav.projects', permission: 'project:manage' },
       },
+      {
+        path: 'no-access',
+        component: () => import('@/views/NoAccessView.vue'),
+        meta: { titleKey: 'nav.noAccess' },
+      },
     ],
   },
   { path: '/:pathMatch(.*)*', redirect: '/' },
@@ -64,6 +69,13 @@ const router = createRouter({
   history: createWebHistory(),
   routes,
 })
+
+function canAccessPermission(auth: ReturnType<typeof useAuthStore>, permission: string) {
+  if (permission === 'ticket:read:own') {
+    return auth.hasPermission('ticket:read:own') || auth.hasPermission('ticket:read:all')
+  }
+  return auth.hasPermission(permission)
+}
 
 router.beforeEach(async (to) => {
   const auth = useAuthStore()
@@ -79,9 +91,8 @@ router.beforeEach(async (to) => {
     }
   }
   const permission = to.meta.permission
-  if (permission && !auth.hasPermission(permission)) {
-    if (permission === 'ticket:read:own' && auth.hasPermission('ticket:read:all')) return true
-    return '/'
+  if (permission && !canAccessPermission(auth, permission)) {
+    return { path: '/no-access', replace: true }
   }
   return true
 })

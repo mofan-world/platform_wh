@@ -47,6 +47,7 @@ const messages = {
       projects: '项目管理',
       login: '登录',
       register: '注册',
+      noAccess: '暂无权限',
     },
     auth: {
       eyebrow: '平台身份认证',
@@ -355,6 +356,7 @@ const messages = {
       projects: 'Project Management',
       login: 'Sign In',
       register: 'Register',
+      noAccess: 'No Access',
     },
     auth: {
       eyebrow: 'Platform Identity',

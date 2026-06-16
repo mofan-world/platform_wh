@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, onMounted, ref, watch } from 'vue'
+import { computed, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { Tickets, Plus, User, SwitchButton, Collection, FolderOpened, Fold, Expand, ArrowDown } from '@element-plus/icons-vue'
 import { useAuthStore } from '@/stores/auth'
@@ -25,8 +25,14 @@ const sidebarCollapsed = ref(localStorage.getItem('platform-sidebar-collapsed') 
 const activeSystem = computed(() => route.path.startsWith('/admin/users') ? 'identity' : 'issue')
 const activeSystemTitle = computed(() => activeSystem.value === 'identity' ? t('platform.identity') : t('platform.issue'))
 const userRoles = computed(() => auth.user?.roles?.join(' / ') || t('platform.userRoles'))
+const canReadTickets = computed(() => auth.hasPermission('ticket:read:own') || auth.hasPermission('ticket:read:all'))
+const canCreateTicket = computed(() => auth.hasPermission('ticket:create'))
+const canManageVersions = computed(() => auth.hasPermission('version:manage'))
+const canManageProjects = computed(() => auth.hasPermission('project:manage'))
+const canManageUsers = computed(() => auth.hasPermission('user:manage'))
 
 const activeMenu = computed(() => {
+  if (route.path === '/no-access') return '/no-access'
   if (route.path.startsWith('/admin/projects')) return '/admin/projects'
   if (route.path.startsWith('/admin/versions')) return '/admin/versions'
   if (route.path.startsWith('/admin')) return '/admin/users'
@@ -42,7 +48,7 @@ watch(
     tabs.value.push({
       path,
       titleKey: route.meta.titleKey || 'app.workspace',
-      closable: path !== '/tickets',
+      closable: !['/tickets', '/no-access'].includes(path),
     })
   },
   { immediate: true },
@@ -59,7 +65,7 @@ function removeTab(path: string | number) {
   tabs.value.splice(index, 1)
   if (targetPath !== route.fullPath) return
   const nextTab = tabs.value[Math.min(index, tabs.value.length - 1)]
-  router.push(nextTab?.path || '/tickets')
+  router.push(nextTab?.path || (canReadTickets.value ? '/tickets' : '/no-access'))
 }
 
 async function logout() {
@@ -83,7 +89,14 @@ async function changeProject(projectId: number) {
   if (route.path !== '/tickets') await router.push('/tickets')
 }
 
-onMounted(() => projects.loadProjects())
+watch(
+  canReadTickets,
+  (canRead) => {
+    if (canRead) projects.loadProjects()
+    else projects.reset()
+  },
+  { immediate: true },
+)
 </script>
 
 <template>
@@ -94,10 +107,10 @@ onMounted(() => projects.loadProjects())
         <strong>{{ t('platform.title') }}</strong>
       </div>
       <nav class="system-switcher" :aria-label="t('platform.switchSystem')">
-        <router-link :class="{ active: activeSystem === 'issue' }" to="/tickets">{{ t('platform.issue') }}</router-link>
+        <router-link v-if="canReadTickets" :class="{ active: activeSystem === 'issue' }" to="/tickets">{{ t('platform.issue') }}</router-link>
         <a href="/travel/">{{ t('platform.travel') }}</a>
         <router-link
-          v-if="auth.hasPermission('user:manage')"
+          v-if="canManageUsers"
           :class="{ active: activeSystem === 'identity' }"
           to="/admin/users"
         >
@@ -138,25 +151,25 @@ onMounted(() => projects.loadProjects())
 
       <el-menu :default-active="activeMenu" :collapse="sidebarCollapsed" router>
         <template v-if="activeSystem === 'issue'">
-        <el-menu-item index="/tickets">
+        <el-menu-item v-if="canReadTickets" index="/tickets">
           <el-icon><Tickets /></el-icon>
           <span>{{ t('nav.tickets') }}</span>
         </el-menu-item>
-        <el-menu-item v-if="auth.hasPermission('ticket:create')" index="/tickets/new">
+        <el-menu-item v-if="canCreateTicket" index="/tickets/new">
           <el-icon><Plus /></el-icon>
           <span>{{ t('nav.createTicket') }}</span>
         </el-menu-item>
-        <el-menu-item v-if="auth.hasPermission('version:manage')" index="/admin/versions">
+        <el-menu-item v-if="canManageVersions" index="/admin/versions">
           <el-icon><Collection /></el-icon>
           <span>{{ t('nav.versions') }}</span>
         </el-menu-item>
-        <el-menu-item v-if="auth.hasPermission('project:manage')" index="/admin/projects">
+        <el-menu-item v-if="canManageProjects" index="/admin/projects">
           <el-icon><FolderOpened /></el-icon>
           <span>{{ t('nav.projects') }}</span>
         </el-menu-item>
         </template>
         <template v-else>
-        <el-menu-item v-if="auth.hasPermission('user:manage')" index="/admin/users">
+        <el-menu-item v-if="canManageUsers" index="/admin/users">
           <el-icon><User /></el-icon>
           <span>{{ t('nav.users') }}</span>
         </el-menu-item>
@@ -183,7 +196,7 @@ onMounted(() => projects.loadProjects())
         </div>
         <div class="topbar-actions">
           <el-select
-            v-if="activeSystem === 'issue'"
+            v-if="activeSystem === 'issue' && canReadTickets"
             v-model="projects.currentProjectId"
             class="project-switcher"
             :loading="projects.loading"
