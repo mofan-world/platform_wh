@@ -36,7 +36,7 @@ import java.util.List;
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/api/admin/identity")
-@PreAuthorize("hasAuthority('identity:manage')")
+@PreAuthorize("hasAuthority('identity:manage') or hasRole('ADMIN')")
 public class IdentityManagementController {
 
     private final IdentityManagementService service;

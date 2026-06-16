@@ -32,7 +32,8 @@ const canCreateTicket = computed(() => auth.hasPermission('ticket:create'))
 const canManageVersions = computed(() => auth.hasPermission('version:manage'))
 const canManageProjects = computed(() => auth.hasPermission('project:manage'))
 const canManageUsers = computed(() => auth.hasPermission('user:manage'))
-const canManageIdentity = computed(() => auth.hasPermission('identity:manage'))
+const canManageIdentity = computed(() => auth.hasPermission('identity:manage') || auth.user?.roles.includes('ADMIN'))
+const systemManagementHome = computed(() => canManageIdentity.value ? '/admin/identity' : '/admin/users')
 
 const activeMenu = computed(() => {
   if (route.path === '/no-access') return '/no-access'
@@ -110,14 +111,15 @@ watch(
         <strong>{{ t('platform.title') }}</strong>
       </div>
       <nav class="system-switcher" :aria-label="t('platform.switchSystem')">
-        <router-link class="active" to="/tickets">{{ t('platform.issue') }}</router-link>
+        <router-link :class="{ active: activeSystem === 'issue' }" to="/tickets">{{ t('platform.issue') }}</router-link>
         <a
-            v-if="auth.hasPermission('user:manage')"
-            href="/identity/"
-          >
+          v-if="canManageUsers || canManageIdentity"
+          :class="{ active: activeSystem === 'identity' }"
+          :href="systemManagementHome"
+        >
           {{ t('platform.identity') }}
         </a>
-  </nav>
+      </nav>
       <div class="platform-user">
         <el-dropdown class="language-dropdown topbar-language" trigger="click" @command="changeLanguage">
           <el-button text class="language-toggle">

@@ -61,6 +61,7 @@ const router = createRouter({
 })
 
 function canAccessPermission(auth: ReturnType<typeof useAuthStore>, permission: string) {
+  if (permission === 'identity:manage' && auth.user?.roles.includes('ADMIN')) return true
   if (permission === 'ticket:read:own') {
     return auth.hasPermission('ticket:read:own') || auth.hasPermission('ticket:read:all')
   }

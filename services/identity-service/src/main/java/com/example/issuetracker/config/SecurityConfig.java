@@ -35,6 +35,7 @@ import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 import javax.crypto.SecretKey;
 import javax.crypto.spec.SecretKeySpec;
 import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
 import java.util.List;
 
 @Configuration
@@ -106,9 +107,18 @@ public class SecurityConfig {
     private Converter<Jwt, AbstractAuthenticationToken> jwtConverter() {
         return jwt -> {
             List<String> permissions = jwt.getClaimAsStringList("permissions");
-            var authorities = permissions == null
-                    ? List.<SimpleGrantedAuthority>of()
-                    : permissions.stream().map(SimpleGrantedAuthority::new).toList();
+            List<String> roles = jwt.getClaimAsStringList("roles");
+            var authorities = new ArrayList<SimpleGrantedAuthority>();
+            if (permissions != null) {
+                permissions.stream()
+                        .map(SimpleGrantedAuthority::new)
+                        .forEach(authorities::add);
+            }
+            if (roles != null) {
+                roles.stream()
+                        .map(role -> new SimpleGrantedAuthority("ROLE_" + role))
+                        .forEach(authorities::add);
+            }
             return new JwtAuthenticationToken(jwt, authorities, jwt.getSubject());
         };
     }

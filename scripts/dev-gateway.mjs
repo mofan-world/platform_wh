@@ -6,6 +6,7 @@ import { fileURLToPath } from "node:url";
 
 const root = resolve(fileURLToPath(new URL("..", import.meta.url)));
 const issueRoot = join(root, "apps", "issue-tracker-web", "dist");
+const identityRoot = join(root, "apps", "identity-web", "dist");
 const host = process.env.PLATFORM_HOST || "127.0.0.1";
 const port = Number(process.env.PLATFORM_PORT || 8000);
 const identityPort = Number(process.env.IDENTITY_SERVICE_PORT || 8083);
@@ -90,6 +91,16 @@ function isIdentityPath(pathname) {
     || pathname.startsWith("/api/users/");
 }
 
+function isIdentityWebPath(pathname) {
+  return pathname === "/login"
+    || pathname === "/register"
+    || pathname === "/admin/identity"
+    || pathname.startsWith("/admin/identity/")
+    || pathname === "/admin/users"
+    || pathname.startsWith("/admin/users/")
+    || pathname.startsWith("/identity/");
+}
+
 createServer(async (request, response) => {
   const url = new URL(request.url || "/", `http://${request.headers.host || `${host}:${port}`}`);
   if (isIdentityPath(url.pathname)) {
@@ -98,6 +109,18 @@ createServer(async (request, response) => {
   }
   if (url.pathname.startsWith("/api/")) {
     proxy(request, response, issuePort, `${url.pathname}${url.search}`);
+    return;
+  }
+  if (url.pathname === "/identity") {
+    response.writeHead(302, { Location: "/admin/identity" });
+    response.end();
+    return;
+  }
+  if (isIdentityWebPath(url.pathname)) {
+    const staticPath = url.pathname.startsWith("/identity/")
+      ? url.pathname.slice("/identity".length)
+      : url.pathname;
+    await serveStatic(response, identityRoot, staticPath, true);
     return;
   }
   await serveStatic(response, issueRoot, url.pathname, true);

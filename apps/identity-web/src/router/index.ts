@@ -12,11 +12,11 @@ declare module 'vue-router' {
 const routes: RouteRecordRaw[] = [
   {
     path: '/identity',
-    redirect: '/admin/users',
+    redirect: '/admin/identity',
   },
   {
     path: '/identity/',
-    redirect: '/admin/users',
+    redirect: '/admin/identity',
   },
   {
     path: '/login',
@@ -31,8 +31,13 @@ const routes: RouteRecordRaw[] = [
   {
     path: '/',
     component: () => import('@/layouts/AppLayout.vue'),
-    redirect: '/admin/users',
+    redirect: '/admin/identity',
     children: [
+      {
+        path: 'admin/identity',
+        component: () => import('@/views/IdentityManagementView.vue'),
+        meta: { titleKey: 'nav.identityConfig', permission: 'identity:manage' },
+      },
       {
         path: 'admin/users',
         component: () => import('@/views/UserManagementView.vue'),
@@ -40,7 +45,7 @@ const routes: RouteRecordRaw[] = [
       },
     ],
   },
-  { path: '/:pathMatch(.*)*', redirect: '/admin/users' },
+  { path: '/:pathMatch(.*)*', redirect: '/admin/identity' },
 ]
 
 const router = createRouter({
@@ -48,10 +53,19 @@ const router = createRouter({
   routes,
 })
 
+function hasRole(auth: ReturnType<typeof useAuthStore>, role: string) {
+  return auth.user?.roles.includes(role) ?? false
+}
+
+function canAccessPermission(auth: ReturnType<typeof useAuthStore>, permission: string) {
+  if (permission === 'identity:manage' && hasRole(auth, 'ADMIN')) return true
+  return auth.hasPermission(permission)
+}
+
 router.beforeEach(async (to) => {
   const auth = useAuthStore()
   if (to.meta.public) {
-    return auth.authenticated && (to.path === '/login' || to.path === '/register') ? '/admin/users' : true
+    return auth.authenticated && (to.path === '/login' || to.path === '/register') ? '/admin/identity' : true
   }
   if (!auth.authenticated) return { path: '/login', query: { redirect: to.fullPath } }
   if (!auth.user) {
@@ -62,7 +76,7 @@ router.beforeEach(async (to) => {
     }
   }
   const permission = to.meta.permission
-  if (permission && !auth.hasPermission(permission)) {
+  if (permission && !canAccessPermission(auth, permission)) {
     window.location.assign('/tickets')
     return false
   }

@@ -481,6 +481,33 @@ h1, h2, p {
   width: 150px;
 }
 
+.identity-tabs {
+  margin-top: 8px;
+}
+
+.identity-tabs .sub-heading {
+  margin-bottom: 18px;
+}
+
+.identity-tabs .sub-heading h2 {
+  margin: 0;
+}
+
+.identity-split {
+  display: grid;
+  grid-template-columns: minmax(0, 1.2fr) minmax(360px, 0.8fr);
+  gap: 22px;
+  align-items: start;
+}
+
+.identity-split > div {
+  min-width: 0;
+}
+
+.identity-split.dictionaries {
+  grid-template-columns: minmax(320px, 0.8fr) minmax(0, 1.2fr);
+}
+
 .ticket-filter-bar {
   flex-wrap: wrap;
 }

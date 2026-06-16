@@ -25,8 +25,8 @@ function changeLanguage(command: string | number | object) {
 }
 
 async function navigateAfterAuth(redirect: string) {
-  const normalized = redirect === '/identity' || redirect === '/identity/' ? '/admin/users' : redirect
-  if (normalized.startsWith('/admin/users')) {
+  const normalized = redirect === '/identity' || redirect === '/identity/' ? '/admin/identity' : redirect
+  if (normalized.startsWith('/admin/')) {
     await router.replace(normalized)
     return
   }
@@ -40,7 +40,7 @@ async function submit() {
     await auth.login(form)
     ElMessage.success(t('auth.loginSuccess'))
     const redirect = (route.query.redirect as string) || '/'
-    await router.replace(redirect)
+    await navigateAfterAuth(redirect)
   } catch (error) {
     ElMessage.error(errorMessage(error))
   } finally {

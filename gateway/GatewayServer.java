@@ -61,7 +61,7 @@ public class GatewayServer {
                 return;
             }
             if ("/identity".equals(path)) {
-                exchange.getResponseHeaders().set("Location", "/identity/");
+                exchange.getResponseHeaders().set("Location", "/admin/identity");
                 exchange.sendResponseHeaders(302, -1);
                 exchange.close();
                 return;
@@ -96,6 +96,8 @@ public class GatewayServer {
     private static boolean isIdentityWebPath(String path) {
         return path.equals("/login")
                 || path.equals("/register")
+                || path.equals("/admin/identity")
+                || path.startsWith("/admin/identity/")
                 || path.equals("/admin/users")
                 || path.startsWith("/admin/users/")
                 || path.startsWith("/identity/");

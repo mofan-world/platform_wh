@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { ArrowDown, Expand, Fold, SwitchButton, User } from '@element-plus/icons-vue'
+import { ArrowDown, Expand, Fold, Setting, SwitchButton, User } from '@element-plus/icons-vue'
 import { useAuthStore } from '@/stores/auth'
 import { setAppLocale, useAppI18n } from '@/i18n'
 
@@ -20,6 +20,13 @@ const tabs = ref<WorkspaceTab[]>([])
 const activeTab = ref(route.fullPath)
 const sidebarCollapsed = ref(localStorage.getItem('platform-identity-sidebar-collapsed') === 'true')
 const userRoles = computed(() => auth.user?.roles?.join(' / ') || t('platform.userRoles'))
+const canManageUsers = computed(() => auth.hasPermission('user:manage'))
+const canManageIdentity = computed(() => auth.hasPermission('identity:manage') || auth.user?.roles.includes('ADMIN'))
+const systemManagementHome = computed(() => canManageIdentity.value ? '/admin/identity' : '/admin/users')
+const activeMenu = computed(() => {
+  if (route.path.startsWith('/admin/identity')) return '/admin/identity'
+  return '/admin/users'
+})
 
 watch(
   () => route.fullPath,
@@ -29,7 +36,7 @@ watch(
     tabs.value.push({
       path,
       titleKey: route.meta.titleKey || 'app.workspace',
-      closable: path !== '/admin/users',
+      closable: path !== systemManagementHome.value,
     })
   },
   { immediate: true },
@@ -46,7 +53,7 @@ function removeTab(path: string | number) {
   tabs.value.splice(index, 1)
   if (targetPath !== route.fullPath) return
   const nextTab = tabs.value[Math.min(index, tabs.value.length - 1)]
-  router.push(nextTab?.path || '/admin/users')
+  router.push(nextTab?.path || systemManagementHome.value)
 }
 
 async function logout() {
@@ -74,7 +81,7 @@ function changeLanguage(command: string | number | object) {
       </div>
       <nav class="system-switcher" :aria-label="t('platform.switchSystem')">
         <a href="/tickets">{{ t('platform.issue') }}</a>
-        <router-link class="active" to="/admin/users">{{ t('platform.identity') }}</router-link>
+        <router-link class="active" :to="systemManagementHome">{{ t('platform.identity') }}</router-link>
       </nav>
       <div class="platform-user">
         <el-dropdown class="language-dropdown topbar-language" trigger="click" @command="changeLanguage">
@@ -101,15 +108,19 @@ function changeLanguage(command: string | number | object) {
 
     <aside class="sidebar">
       <div class="brand">
-        <div class="brand-mark">ID</div>
+        <div class="brand-mark">SM</div>
         <div>
           <strong>{{ t('platform.identity') }}</strong>
           <span>{{ t('platform.currentSystem') }}</span>
         </div>
       </div>
 
-      <el-menu default-active="/admin/users" :collapse="sidebarCollapsed" router>
-        <el-menu-item index="/admin/users">
+      <el-menu :default-active="activeMenu" :collapse="sidebarCollapsed" router>
+        <el-menu-item v-if="canManageIdentity" index="/admin/identity">
+          <el-icon><Setting /></el-icon>
+          <span>{{ t('nav.identityConfig') }}</span>
+        </el-menu-item>
+        <el-menu-item v-if="canManageUsers" index="/admin/users">
           <el-icon><User /></el-icon>
           <span>{{ t('nav.users') }}</span>
         </el-menu-item>
@@ -130,7 +141,7 @@ function changeLanguage(command: string | number | object) {
     <main class="content">
       <header class="topbar">
         <div>
-          <span class="eyebrow">IDENTITY</span>
+          <span class="eyebrow">SYSTEM</span>
           <h1>{{ route.meta.titleKey ? t(route.meta.titleKey) : t('platform.identity') }}</h1>
         </div>
       </header>

@@ -8,8 +8,8 @@ const initialLocale: AppLocale = storedLocale === 'en' ? 'en' : 'zh-CN'
 const messages = {
   'zh-CN': {
     app: {
-      name: '身份认证平台',
-      center: '身份认证中心',
+      name: '系统管理平台',
+      center: '系统管理中心',
       workspace: '工作台',
       logout: '退出登录',
       language: 'English',
@@ -17,8 +17,7 @@ const messages = {
     platform: {
       title: '统一业务平台',
       issue: '问题跟踪',
-      travel: '出差车票',
-      identity: '身份认证',
+      identity: '系统管理',
       currentSystem: '当前系统',
       switchSystem: '系统切换',
       online: '在线',
@@ -39,13 +38,14 @@ const messages = {
     },
     nav: {
       users: '用户与权限',
+      identityConfig: '系统配置',
       login: '登录',
       register: '注册',
     },
     auth: {
       eyebrow: '平台身份认证',
       heroTitle: '统一身份认证\n连接所有业务系统',
-      heroIntro: '一次登录后可访问问题跟踪、出差车票和后续接入的业务系统，角色权限由身份认证中心统一维护。',
+      heroIntro: '一次登录后可访问问题跟踪和后续接入的业务系统，角色权限由系统管理中心统一维护。',
       sso: '统一登录',
       rbac: '角色授权',
       microservice: '微服务接入',
@@ -112,8 +112,8 @@ const messages = {
   },
   en: {
     app: {
-      name: 'Identity Platform',
-      center: 'Identity Center',
+      name: 'System Management Platform',
+      center: 'System Management Center',
       workspace: 'Workspace',
       logout: 'Sign out',
       language: '中文',
@@ -121,8 +121,7 @@ const messages = {
     platform: {
       title: 'Unified Operations Platform',
       issue: 'Issue Tracker',
-      travel: 'Travel Tickets',
-      identity: 'Identity Center',
+      identity: 'System Management',
       currentSystem: 'Current System',
       switchSystem: 'Switch System',
       online: 'Online',
@@ -143,13 +142,14 @@ const messages = {
     },
     nav: {
       users: 'Users & Access',
+      identityConfig: 'System Config',
       login: 'Sign In',
       register: 'Register',
     },
     auth: {
       eyebrow: 'Platform Identity',
       heroTitle: 'Unified identity\nfor every business system',
-      heroIntro: 'Sign in once to access Issue Tracker, Travel Tickets, and future business systems. Roles and permissions are maintained centrally in the Identity Center.',
+      heroIntro: 'Sign in once to access Issue Tracker and future business systems. Roles and permissions are maintained centrally in System Management.',
       sso: 'Unified Login',
       rbac: 'Role Authorization',
       microservice: 'Microservice Access',
@@ -168,7 +168,7 @@ const messages = {
       registerNow: 'Register now',
       registerEyebrow: 'Join the platform',
       registerHeroTitle: 'Create one account\nfor authorized systems',
-      registerHeroIntro: 'After registration, use your unified account to enter business systems. Administrators can assign roles in the Identity Center.',
+      registerHeroIntro: 'After registration, use your unified account to enter business systems. Administrators can assign roles in System Management.',
       createAccount: 'Create Account',
       registerTitle: 'Register a New Account',
       confirmPassword: 'Confirm Password',
