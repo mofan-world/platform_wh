@@ -13,7 +13,9 @@ public final class TravelTicketAuthorities {
             + "'travel:ops:read'"
             + ")";
 
-    public static final String CAN_CREATE = "hasAnyAuthority('ROLE_ADMIN', 'ROLE_TRAVEL_ADMIN', 'ROLE_TRAVEL_USER', 'travel:ticket:create')";
+    public static final String CAN_CREATE = "hasAnyAuthority('ROLE_ADMIN', 'ROLE_TRAVEL_ADMIN', 'ROLE_TRAVEL_USER'," +
+            "'TRAVEL_USER'," +
+            " 'travel:ticket:create')";
 
     public static final String CAN_UPDATE = "hasAnyAuthority("
             + "'ROLE_ADMIN',"
@@ -36,7 +38,8 @@ public final class TravelTicketAuthorities {
             + "'travel:ticket:approve'"
             + ")";
 
-    public static final String CAN_REINDEX = "hasAnyAuthority('ROLE_ADMIN','ROLE_TRAVEL_ADMIN','travel:search:reindex')";
+    public static final String CAN_REINDEX = "hasAnyAuthority('ROLE_ADMIN','ROLE_TRAVEL_ADMIN'," +
+            "'travel:search:reindex')";
 
     public static final String CAN_READ_OPS = "hasAnyAuthority('ROLE_ADMIN', 'ROLE_TRAVEL_ADMIN', 'travel:ops:read')";
 
