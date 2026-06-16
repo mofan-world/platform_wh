@@ -19,12 +19,8 @@ import java.util.concurrent.Executors;
 
 public class GatewayServer {
 
-    private static final Path ISSUE_WEB = Path.of("/app/issue-web").toAbsolutePath().normalize();
-<<<<<<< HEAD
-=======
+    private static final Path ISSUE_WEB = Path.of("/app/issue-tracker-web").toAbsolutePath().normalize();
     private static final Path IDENTITY_WEB = Path.of("/app/identity-web").toAbsolutePath().normalize();
-    private static final Path TRAVEL_WEB = Path.of("/app/travel-web").toAbsolutePath().normalize();
->>>>>>> 8d4a0dd22c32f7596c9a1123e5b559292bcd79dd
     private static final String IDENTITY_API = getenv("IDENTITY_API_BASE", "http://identity-service:8080");
     private static final String ISSUE_API = getenv("ISSUE_API_BASE", "http://issuetracker-end:8080");
     private static final HttpClient CLIENT = HttpClient.newBuilder()

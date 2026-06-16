@@ -1,11 +1,7 @@
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-<<<<<<< HEAD
 import { Tickets, Plus, User, SwitchButton, Collection, FolderOpened, Fold, Expand, ArrowDown, Setting } from '@element-plus/icons-vue'
-=======
-import { Tickets, Plus, SwitchButton, Collection, FolderOpened, Fold, Expand, ArrowDown } from '@element-plus/icons-vue'
->>>>>>> 8d4a0dd22c32f7596c9a1123e5b559292bcd79dd
 import { useAuthStore } from '@/stores/auth'
 import { useProjectStore } from '@/stores/project'
 import { setAppLocale, useAppI18n } from '@/i18n'
@@ -26,14 +22,10 @@ const tabs = ref<WorkspaceTab[]>([])
 const activeTab = ref(route.fullPath)
 const sidebarCollapsed = ref(localStorage.getItem('platform-sidebar-collapsed') === 'true')
 
-<<<<<<< HEAD
 const activeSystem = computed(() =>
   route.path.startsWith('/admin/users') || route.path.startsWith('/admin/identity') ? 'identity' : 'issue',
 )
 const activeSystemTitle = computed(() => activeSystem.value === 'identity' ? t('platform.identity') : t('platform.issue'))
-=======
-const activeSystemTitle = computed(() => t('platform.issue'))
->>>>>>> 8d4a0dd22c32f7596c9a1123e5b559292bcd79dd
 const userRoles = computed(() => auth.user?.roles?.join(' / ') || t('platform.userRoles'))
 const canReadTickets = computed(() => auth.hasPermission('ticket:read:own') || auth.hasPermission('ticket:read:all'))
 const canCreateTicket = computed(() => auth.hasPermission('ticket:create'))
@@ -118,19 +110,11 @@ watch(
         <strong>{{ t('platform.title') }}</strong>
       </div>
       <nav class="system-switcher" :aria-label="t('platform.switchSystem')">
-<<<<<<< HEAD
         <router-link v-if="canReadTickets" :class="{ active: activeSystem === 'issue' }" to="/tickets">{{ t('platform.issue') }}</router-link>
         <router-link
           v-if="canManageUsers || canManageIdentity"
           :class="{ active: activeSystem === 'identity' }"
           :to="canManageUsers ? '/admin/users' : '/admin/identity'"
-=======
-        <router-link class="active" to="/tickets">{{ t('platform.issue') }}</router-link>
-        <a href="/travel/">{{ t('platform.travel') }}</a>
-        <a
-          v-if="auth.hasPermission('user:manage')"
-          href="/identity/"
->>>>>>> 8d4a0dd22c32f7596c9a1123e5b559292bcd79dd
         >
           {{ t('platform.identity') }}
         </a>
@@ -168,12 +152,8 @@ watch(
       </div>
 
       <el-menu :default-active="activeMenu" :collapse="sidebarCollapsed" router>
-<<<<<<< HEAD
         <template v-if="activeSystem === 'issue'">
         <el-menu-item v-if="canReadTickets" index="/tickets">
-=======
-        <el-menu-item index="/tickets">
->>>>>>> 8d4a0dd22c32f7596c9a1123e5b559292bcd79dd
           <el-icon><Tickets /></el-icon>
           <span>{{ t('nav.tickets') }}</span>
         </el-menu-item>
@@ -189,7 +169,6 @@ watch(
           <el-icon><FolderOpened /></el-icon>
           <span>{{ t('nav.projects') }}</span>
         </el-menu-item>
-<<<<<<< HEAD
         </template>
         <template v-else>
         <el-menu-item v-if="canManageUsers" index="/admin/users">
@@ -201,8 +180,6 @@ watch(
           <span>{{ t('nav.identityConfig') }}</span>
         </el-menu-item>
         </template>
-=======
->>>>>>> 8d4a0dd22c32f7596c9a1123e5b559292bcd79dd
       </el-menu>
       <div class="sidebar-footer">
         <el-button
@@ -225,10 +202,7 @@ watch(
         </div>
         <div class="topbar-actions">
           <el-select
-<<<<<<< HEAD
             v-if="activeSystem === 'issue' && canReadTickets"
-=======
->>>>>>> 8d4a0dd22c32f7596c9a1123e5b559292bcd79dd
             v-model="projects.currentProjectId"
             class="project-switcher"
             :loading="projects.loading"

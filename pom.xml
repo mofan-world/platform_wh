@@ -17,7 +17,6 @@
     <modules>
         <module>services/identity-service</module>
         <module>services/issue-tracker</module>
-        <module>services/travel-ticket</module>
     </modules>
 
     <properties>
