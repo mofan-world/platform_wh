@@ -20,6 +20,11 @@ import java.util.concurrent.Executors;
 public class GatewayServer {
 
     private static final Path ISSUE_WEB = Path.of("/app/issue-web").toAbsolutePath().normalize();
+<<<<<<< HEAD
+=======
+    private static final Path IDENTITY_WEB = Path.of("/app/identity-web").toAbsolutePath().normalize();
+    private static final Path TRAVEL_WEB = Path.of("/app/travel-web").toAbsolutePath().normalize();
+>>>>>>> 8d4a0dd22c32f7596c9a1123e5b559292bcd79dd
     private static final String IDENTITY_API = getenv("IDENTITY_API_BASE", "http://identity-service:8080");
     private static final String ISSUE_API = getenv("ISSUE_API_BASE", "http://issuetracker-end:8080");
     private static final HttpClient CLIENT = HttpClient.newBuilder()
@@ -59,6 +64,19 @@ public class GatewayServer {
                 proxy(exchange, IDENTITY_API, path);
                 return;
             }
+            if ("/identity".equals(path)) {
+                exchange.getResponseHeaders().set("Location", "/identity/");
+                exchange.sendResponseHeaders(302, -1);
+                exchange.close();
+                return;
+            }
+            if (isIdentityWebPath(path)) {
+                String staticPath = path.startsWith("/identity/")
+                        ? path.substring("/identity".length())
+                        : path;
+                serveStatic(exchange, IDENTITY_WEB, staticPath);
+                return;
+            }
             if (path.startsWith("/api/")) {
                 proxy(exchange, ISSUE_API, path);
                 return;
@@ -77,6 +95,14 @@ public class GatewayServer {
                 || path.equals("/api/admin/roles")
                 || path.startsWith("/api/admin/identity/")
                 || path.startsWith("/api/users/");
+    }
+
+    private static boolean isIdentityWebPath(String path) {
+        return path.equals("/login")
+                || path.equals("/register")
+                || path.equals("/admin/users")
+                || path.startsWith("/admin/users/")
+                || path.startsWith("/identity/");
     }
 
     private static void proxy(HttpExchange exchange, String base, String targetPath)

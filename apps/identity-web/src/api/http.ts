@@ -15,10 +15,6 @@ http.interceptors.request.use((config) => {
   if (token) {
     config.headers.Authorization = `Bearer ${token}`
   }
-  const projectId = localStorage.getItem('currentProjectId')
-  if (projectId) {
-    config.headers['X-Project-Id'] = projectId
-  }
   return config
 })
 
@@ -70,7 +66,6 @@ export function clearSession() {
   localStorage.removeItem('accessToken')
   localStorage.removeItem('refreshToken')
   localStorage.removeItem('userProfile')
-  localStorage.removeItem('currentProjectId')
 }
 
 export function errorMessage(error: unknown): string {

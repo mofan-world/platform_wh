@@ -24,14 +24,28 @@ function changeLanguage(command: string | number | object) {
   setAppLocale(nextLocale)
 }
 
+async function navigateAfterAuth(redirect: string) {
+  const normalized = redirect === '/identity' || redirect === '/identity/' ? '/admin/users' : redirect
+  if (normalized.startsWith('/admin/users')) {
+    await router.replace(normalized)
+    return
+  }
+  window.location.assign(normalized || '/tickets')
+}
+
 async function submit() {
   await formRef.value?.validate()
   loading.value = true
   try {
     await auth.login(form)
     ElMessage.success(t('auth.loginSuccess'))
+<<<<<<< HEAD:apps/issue-tracker-web/src/views/LoginView.vue
     const redirect = (route.query.redirect as string) || '/'
     await router.replace(redirect)
+=======
+    const redirect = (route.query.redirect as string) || '/tickets'
+    await navigateAfterAuth(redirect)
+>>>>>>> 8d4a0dd22c32f7596c9a1123e5b559292bcd79dd:apps/identity-web/src/views/LoginView.vue
   } catch (error) {
     ElMessage.error(errorMessage(error))
   } finally {

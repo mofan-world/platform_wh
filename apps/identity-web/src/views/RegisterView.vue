@@ -1,13 +1,11 @@
 <script setup lang="ts">
 import { computed, reactive, ref } from 'vue'
-import { useRouter } from 'vue-router'
 import { ElMessage, type FormInstance, type FormRules } from 'element-plus'
 import { ArrowDown } from '@element-plus/icons-vue'
 import { useAuthStore } from '@/stores/auth'
 import { errorMessage } from '@/api/http'
 import { setAppLocale, useAppI18n } from '@/i18n'
 
-const router = useRouter()
 const auth = useAuthStore()
 const { locale, t } = useAppI18n()
 const formRef = ref<FormInstance>()
@@ -60,7 +58,7 @@ async function submit() {
       password: form.password,
     })
     ElMessage.success(t('auth.registerSuccess'))
-    await router.replace('/')
+    window.location.assign('/tickets')
   } catch (error) {
     ElMessage.error(errorMessage(error))
   } finally {

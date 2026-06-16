@@ -48,6 +48,8 @@ spring:
   elasticsearch:
     uris: ${ELASTICSEARCH_URIS:http://localhost:9200}
   cloud:
+    compatibility-verifier:
+      enabled: ${SPRING_CLOUD_COMPATIBILITY_VERIFIER_ENABLED:false}
     nacos:
       config:
         import-check:

@@ -39,6 +39,8 @@ spring:
           max-idle: 16
           min-idle: 4
   cloud:
+    compatibility-verifier:
+      enabled: ${SPRING_CLOUD_COMPATIBILITY_VERIFIER_ENABLED:false}
     nacos:
       config:
         import-check:

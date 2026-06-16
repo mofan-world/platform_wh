@@ -11,16 +11,6 @@ declare module 'vue-router' {
 
 const routes: RouteRecordRaw[] = [
   {
-    path: '/login',
-    component: () => import('@/views/LoginView.vue'),
-    meta: { public: true, titleKey: 'nav.login' },
-  },
-  {
-    path: '/register',
-    component: () => import('@/views/RegisterView.vue'),
-    meta: { public: true, titleKey: 'nav.register' },
-  },
-  {
     path: '/',
     component: () => import('@/layouts/AppLayout.vue'),
     redirect: '/tickets',
@@ -41,6 +31,7 @@ const routes: RouteRecordRaw[] = [
         meta: { titleKey: 'nav.ticketDetail', permission: 'ticket:read:own' },
       },
       {
+<<<<<<< HEAD
         path: 'admin/users',
         component: () => import('@/views/UserManagementView.vue'),
         meta: { titleKey: 'nav.users', permission: 'user:manage' },
@@ -51,6 +42,8 @@ const routes: RouteRecordRaw[] = [
         meta: { titleKey: 'nav.identityConfig', permission: 'identity:manage' },
       },
       {
+=======
+>>>>>>> 8d4a0dd22c32f7596c9a1123e5b559292bcd79dd
         path: 'admin/versions',
         component: () => import('@/views/VersionManagementView.vue'),
         meta: { titleKey: 'nav.versions', permission: 'version:manage' },
@@ -84,15 +77,17 @@ function canAccessPermission(auth: ReturnType<typeof useAuthStore>, permission: 
 
 router.beforeEach(async (to) => {
   const auth = useAuthStore()
-  if (to.meta.public) {
-    return auth.authenticated && (to.path === '/login' || to.path === '/register') ? '/' : true
+  if (to.meta.public) return true
+  if (!auth.authenticated) {
+    window.location.assign(`/login?redirect=${encodeURIComponent(to.fullPath)}`)
+    return false
   }
-  if (!auth.authenticated) return { path: '/login', query: { redirect: to.fullPath } }
   if (!auth.user) {
     try {
       await auth.fetchMe()
     } catch {
-      return '/login'
+      window.location.assign(`/login?redirect=${encodeURIComponent(to.fullPath)}`)
+      return false
     }
   }
   const permission = to.meta.permission
