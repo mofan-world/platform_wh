@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { Tickets, Plus, User, SwitchButton, Collection, FolderOpened, Fold, Expand, ArrowDown } from '@element-plus/icons-vue'
+import { Tickets, Plus, User, SwitchButton, Collection, FolderOpened, Fold, Expand, ArrowDown, Setting } from '@element-plus/icons-vue'
 import { useAuthStore } from '@/stores/auth'
 import { useProjectStore } from '@/stores/project'
 import { setAppLocale, useAppI18n } from '@/i18n'
@@ -22,7 +22,9 @@ const tabs = ref<WorkspaceTab[]>([])
 const activeTab = ref(route.fullPath)
 const sidebarCollapsed = ref(localStorage.getItem('platform-sidebar-collapsed') === 'true')
 
-const activeSystem = computed(() => route.path.startsWith('/admin/users') ? 'identity' : 'issue')
+const activeSystem = computed(() =>
+  route.path.startsWith('/admin/users') || route.path.startsWith('/admin/identity') ? 'identity' : 'issue',
+)
 const activeSystemTitle = computed(() => activeSystem.value === 'identity' ? t('platform.identity') : t('platform.issue'))
 const userRoles = computed(() => auth.user?.roles?.join(' / ') || t('platform.userRoles'))
 const canReadTickets = computed(() => auth.hasPermission('ticket:read:own') || auth.hasPermission('ticket:read:all'))
@@ -30,9 +32,11 @@ const canCreateTicket = computed(() => auth.hasPermission('ticket:create'))
 const canManageVersions = computed(() => auth.hasPermission('version:manage'))
 const canManageProjects = computed(() => auth.hasPermission('project:manage'))
 const canManageUsers = computed(() => auth.hasPermission('user:manage'))
+const canManageIdentity = computed(() => auth.hasPermission('identity:manage'))
 
 const activeMenu = computed(() => {
   if (route.path === '/no-access') return '/no-access'
+  if (route.path.startsWith('/admin/identity')) return '/admin/identity'
   if (route.path.startsWith('/admin/projects')) return '/admin/projects'
   if (route.path.startsWith('/admin/versions')) return '/admin/versions'
   if (route.path.startsWith('/admin')) return '/admin/users'
@@ -108,11 +112,10 @@ watch(
       </div>
       <nav class="system-switcher" :aria-label="t('platform.switchSystem')">
         <router-link v-if="canReadTickets" :class="{ active: activeSystem === 'issue' }" to="/tickets">{{ t('platform.issue') }}</router-link>
-        <a href="/travel/">{{ t('platform.travel') }}</a>
         <router-link
-          v-if="canManageUsers"
+          v-if="canManageUsers || canManageIdentity"
           :class="{ active: activeSystem === 'identity' }"
-          to="/admin/users"
+          :to="canManageUsers ? '/admin/users' : '/admin/identity'"
         >
           {{ t('platform.identity') }}
         </router-link>
@@ -172,6 +175,10 @@ watch(
         <el-menu-item v-if="canManageUsers" index="/admin/users">
           <el-icon><User /></el-icon>
           <span>{{ t('nav.users') }}</span>
+        </el-menu-item>
+        <el-menu-item v-if="canManageIdentity" index="/admin/identity">
+          <el-icon><Setting /></el-icon>
+          <span>{{ t('nav.identityConfig') }}</span>
         </el-menu-item>
         </template>
       </el-menu>

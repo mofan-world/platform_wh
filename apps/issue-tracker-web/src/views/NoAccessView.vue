@@ -35,8 +35,7 @@ async function logout() {
       </div>
 
       <div class="no-access-actions">
-        <a class="access-action primary" href="/travel/">进入出差车票</a>
-        <el-button :icon="SwitchButton" @click="logout">退出登录</el-button>
+        <el-button type="primary" :icon="SwitchButton" @click="logout">退出登录</el-button>
       </div>
     </div>
   </section>

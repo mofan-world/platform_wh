@@ -17,7 +17,6 @@ const messages = {
     platform: {
       title: '统一业务平台',
       issue: '问题跟踪',
-      travel: '出差车票',
       identity: '身份认证',
       currentSystem: '当前系统',
       switchSystem: '系统切换',
@@ -43,6 +42,7 @@ const messages = {
       createTicket: '创建问题单',
       ticketDetail: '问题单详情',
       users: '用户与权限',
+      identityConfig: '身份配置',
       versions: '版本管理',
       projects: '项目管理',
       login: '登录',
@@ -52,7 +52,7 @@ const messages = {
     auth: {
       eyebrow: '平台身份认证',
       heroTitle: '统一身份认证\n连接所有业务系统',
-      heroIntro: '一次登录后可访问问题跟踪、出差车票和后续接入的业务系统，角色权限由身份认证中心统一维护。',
+      heroIntro: '一次登录后可访问问题跟踪和后续接入的业务系统，角色权限由身份认证中心统一维护。',
       sso: '统一登录',
       rbac: '角色授权',
       microservice: '微服务接入',
@@ -326,7 +326,6 @@ const messages = {
     platform: {
       title: 'Unified Operations Platform',
       issue: 'Issue Tracker',
-      travel: 'Travel Tickets',
       identity: 'Identity Center',
       currentSystem: 'Current System',
       switchSystem: 'Switch System',
@@ -352,6 +351,7 @@ const messages = {
       createTicket: 'Create Ticket',
       ticketDetail: 'Ticket Details',
       users: 'Users & Access',
+      identityConfig: 'Identity Config',
       versions: 'Version Management',
       projects: 'Project Management',
       login: 'Sign In',
@@ -361,7 +361,7 @@ const messages = {
     auth: {
       eyebrow: 'Platform Identity',
       heroTitle: 'Unified identity\nfor every business system',
-      heroIntro: 'Sign in once to access Issue Tracker, Travel Tickets, and future business systems. Roles and permissions are maintained centrally in the Identity Center.',
+      heroIntro: 'Sign in once to access Issue Tracker and future business systems. Roles and permissions are maintained centrally in the Identity Center.',
       sso: 'Unified Login',
       rbac: 'Role Authorization',
       microservice: 'Microservice Access',

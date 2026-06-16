@@ -17,7 +17,6 @@ import com.example.issuetracker.security.CurrentUser;
 import com.example.issuetracker.common.PageResult;
 import com.example.issuetracker.project.DefaultProjectMembershipService;
 import lombok.RequiredArgsConstructor;
-import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -112,7 +111,6 @@ public class AdminService {
     }
 
     @Transactional(readOnly = true)
-    @Cacheable(cacheNames = "roles", key = "'v3:all'")
     public List<RoleView> listRoles() {
         return roleRepository.findAll().stream()
                 .map(role -> new RoleView(

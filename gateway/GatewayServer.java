@@ -20,10 +20,8 @@ import java.util.concurrent.Executors;
 public class GatewayServer {
 
     private static final Path ISSUE_WEB = Path.of("/app/issue-web").toAbsolutePath().normalize();
-    private static final Path TRAVEL_WEB = Path.of("/app/travel-web").toAbsolutePath().normalize();
     private static final String IDENTITY_API = getenv("IDENTITY_API_BASE", "http://identity-service:8080");
     private static final String ISSUE_API = getenv("ISSUE_API_BASE", "http://issuetracker-end:8080");
-    private static final String TRAVEL_API = getenv("TRAVEL_API_BASE", "http://travel-ticket:8090");
     private static final HttpClient CLIENT = HttpClient.newBuilder()
             .connectTimeout(Duration.ofSeconds(5))
             .build();
@@ -57,26 +55,12 @@ public class GatewayServer {
                 send(exchange, 200, "text/plain; charset=utf-8", "ok\n".getBytes());
                 return;
             }
-            if ("/travel".equals(path)) {
-                exchange.getResponseHeaders().set("Location", "/travel/");
-                exchange.sendResponseHeaders(302, -1);
-                exchange.close();
-                return;
-            }
-            if (path.startsWith("/travel-api/")) {
-                proxy(exchange, TRAVEL_API, "/api/" + path.substring("/travel-api/".length()));
-                return;
-            }
             if (isIdentityPath(path)) {
                 proxy(exchange, IDENTITY_API, path);
                 return;
             }
             if (path.startsWith("/api/")) {
                 proxy(exchange, ISSUE_API, path);
-                return;
-            }
-            if (path.startsWith("/travel/")) {
-                serveStatic(exchange, TRAVEL_WEB, path.substring("/travel".length()));
                 return;
             }
             serveStatic(exchange, ISSUE_WEB, path);
@@ -91,6 +75,7 @@ public class GatewayServer {
                 || path.equals("/api/admin/users")
                 || path.startsWith("/api/admin/users/")
                 || path.equals("/api/admin/roles")
+                || path.startsWith("/api/admin/identity/")
                 || path.startsWith("/api/users/");
     }
 

@@ -138,35 +138,6 @@ services:
         condition: service_healthy
     restart: unless-stopped
 
-  travel-ticket:
-    build:
-      context: ./services/travel-ticket
-      dockerfile: Dockerfile
-    environment:
-      SERVER_PORT: 8090
-      DB_URL: jdbc:postgresql://postgres:5432/platform_travel
-      DB_USERNAME: platform
-      DB_PASSWORD: ${POSTGRES_PASSWORD:-platform}
-      REDIS_HOST: redis
-      REDIS_DATABASE: 2
-      ELASTICSEARCH_URIS: http://elasticsearch:9200
-      NACOS_SERVER_ADDR: nacos:8848
-      NACOS_ENABLED: "true"
-      JWT_SECRET: ${JWT_SECRET:-replace-with-a-production-secret-at-least-32-bytes}
-      JWT_ISSUER: identity-service
-    ports:
-      - "8090:8090"
-    depends_on:
-      postgres:
-        condition: service_healthy
-      redis:
-        condition: service_healthy
-      elasticsearch:
-        condition: service_healthy
-      nacos:
-        condition: service_healthy
-    restart: unless-stopped
-
   gateway:
     build:
       context: .
@@ -175,8 +146,6 @@ services:
       identity-service:
         condition: service_started
       issuetracker-end:
-        condition: service_started
-      travel-ticket:
         condition: service_started
     ports:
       - "80:80"

@@ -46,6 +46,11 @@ const routes: RouteRecordRaw[] = [
         meta: { titleKey: 'nav.users', permission: 'user:manage' },
       },
       {
+        path: 'admin/identity',
+        component: () => import('@/views/IdentityManagementView.vue'),
+        meta: { titleKey: 'nav.identityConfig', permission: 'identity:manage' },
+      },
+      {
         path: 'admin/versions',
         component: () => import('@/views/VersionManagementView.vue'),
         meta: { titleKey: 'nav.versions', permission: 'version:manage' },

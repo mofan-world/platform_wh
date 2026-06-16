@@ -12,13 +12,19 @@ import jakarta.persistence.ManyToMany;
 import jakarta.persistence.Table;
 import lombok.Getter;
 import lombok.Setter;
+import org.springframework.data.annotation.CreatedDate;
+import org.springframework.data.annotation.LastModifiedDate;
+import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
+import jakarta.persistence.EntityListeners;
+import java.time.Instant;
 import java.util.HashSet;
 import java.util.Set;
 
 @Getter
 @Setter
 @Entity
+@EntityListeners(AuditingEntityListener.class)
 @Table(name = "roles")
 public class Role {
 
@@ -32,6 +38,14 @@ public class Role {
     @Column(nullable = false, length = 100)
     private String name;
 
+    private String description;
+
+    @Column(nullable = false)
+    private boolean enabled = true;
+
+    @Column(nullable = false)
+    private int sortOrder;
+
     @ManyToMany(fetch = FetchType.LAZY)
     @JoinTable(
             name = "role_permissions",
@@ -40,7 +54,12 @@ public class Role {
     )
     private Set<Permission> permissions = new HashSet<>();
 
+    @CreatedDate
     @Column(nullable = false, updatable = false)
-    private java.time.Instant createdAt;
+    private Instant createdAt;
+
+    @LastModifiedDate
+    @Column(nullable = false)
+    private Instant updatedAt;
 }
 

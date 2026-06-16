@@ -31,10 +31,6 @@ async function submit() {
     await auth.login(form)
     ElMessage.success(t('auth.loginSuccess'))
     const redirect = (route.query.redirect as string) || '/'
-    if (redirect.startsWith('/travel/')) {
-      window.location.assign(redirect)
-      return
-    }
     await router.replace(redirect)
   } catch (error) {
     ElMessage.error(errorMessage(error))
