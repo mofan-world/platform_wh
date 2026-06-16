@@ -24,18 +24,23 @@ function changeLanguage(command: string | number | object) {
   setAppLocale(nextLocale)
 }
 
+async function navigateAfterAuth(redirect: string) {
+  const normalized = redirect === '/identity' || redirect === '/identity/' ? '/admin/users' : redirect
+  if (normalized.startsWith('/admin/users')) {
+    await router.replace(normalized)
+    return
+  }
+  window.location.assign(normalized || '/tickets')
+}
+
 async function submit() {
   await formRef.value?.validate()
   loading.value = true
   try {
     await auth.login(form)
     ElMessage.success(t('auth.loginSuccess'))
-    const redirect = (route.query.redirect as string) || '/'
-    if (redirect.startsWith('/travel/')) {
-      window.location.assign(redirect)
-      return
-    }
-    await router.replace(redirect)
+    const redirect = (route.query.redirect as string) || '/tickets'
+    await navigateAfterAuth(redirect)
   } catch (error) {
     ElMessage.error(errorMessage(error))
   } finally {

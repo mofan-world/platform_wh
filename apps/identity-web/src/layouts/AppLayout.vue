@@ -1,15 +1,13 @@
 <script setup lang="ts">
-import { computed, onMounted, ref, watch } from 'vue'
+import { computed, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { Tickets, Plus, SwitchButton, Collection, FolderOpened, Fold, Expand, ArrowDown } from '@element-plus/icons-vue'
+import { ArrowDown, Expand, Fold, SwitchButton, User } from '@element-plus/icons-vue'
 import { useAuthStore } from '@/stores/auth'
-import { useProjectStore } from '@/stores/project'
 import { setAppLocale, useAppI18n } from '@/i18n'
 
 const route = useRoute()
 const router = useRouter()
 const auth = useAuthStore()
-const projects = useProjectStore()
 const { locale, t } = useAppI18n()
 
 interface WorkspaceTab {
@@ -20,17 +18,8 @@ interface WorkspaceTab {
 
 const tabs = ref<WorkspaceTab[]>([])
 const activeTab = ref(route.fullPath)
-const sidebarCollapsed = ref(localStorage.getItem('platform-sidebar-collapsed') === 'true')
-
-const activeSystemTitle = computed(() => t('platform.issue'))
+const sidebarCollapsed = ref(localStorage.getItem('platform-identity-sidebar-collapsed') === 'true')
 const userRoles = computed(() => auth.user?.roles?.join(' / ') || t('platform.userRoles'))
-
-const activeMenu = computed(() => {
-  if (route.path.startsWith('/admin/projects')) return '/admin/projects'
-  if (route.path.startsWith('/admin/versions')) return '/admin/versions'
-  if (route.path === '/tickets/new') return '/tickets/new'
-  return '/tickets'
-})
 
 watch(
   () => route.fullPath,
@@ -40,7 +29,7 @@ watch(
     tabs.value.push({
       path,
       titleKey: route.meta.titleKey || 'app.workspace',
-      closable: path !== '/tickets',
+      closable: path !== '/admin/users',
     })
   },
   { immediate: true },
@@ -57,31 +46,23 @@ function removeTab(path: string | number) {
   tabs.value.splice(index, 1)
   if (targetPath !== route.fullPath) return
   const nextTab = tabs.value[Math.min(index, tabs.value.length - 1)]
-  router.push(nextTab?.path || '/tickets')
+  router.push(nextTab?.path || '/admin/users')
 }
 
 async function logout() {
   await auth.logout()
-  projects.reset()
-  window.location.assign('/login')
+  await router.replace('/login')
 }
 
 function toggleSidebar() {
   sidebarCollapsed.value = !sidebarCollapsed.value
-  localStorage.setItem('platform-sidebar-collapsed', String(sidebarCollapsed.value))
+  localStorage.setItem('platform-identity-sidebar-collapsed', String(sidebarCollapsed.value))
 }
 
 function changeLanguage(command: string | number | object) {
   const nextLocale = command === 'en' ? 'en' : 'zh-CN'
   setAppLocale(nextLocale)
 }
-
-async function changeProject(projectId: number) {
-  projects.setCurrentProject(projectId)
-  if (route.path !== '/tickets') await router.push('/tickets')
-}
-
-onMounted(() => projects.loadProjects())
 </script>
 
 <template>
@@ -92,24 +73,19 @@ onMounted(() => projects.loadProjects())
         <strong>{{ t('platform.title') }}</strong>
       </div>
       <nav class="system-switcher" :aria-label="t('platform.switchSystem')">
-        <router-link class="active" to="/tickets">{{ t('platform.issue') }}</router-link>
+        <a href="/tickets">{{ t('platform.issue') }}</a>
         <a href="/travel/">{{ t('platform.travel') }}</a>
-        <a
-          v-if="auth.hasPermission('user:manage')"
-          href="/identity/"
-        >
-          {{ t('platform.identity') }}
-        </a>
+        <router-link class="active" to="/admin/users">{{ t('platform.identity') }}</router-link>
       </nav>
       <div class="platform-user">
         <el-dropdown class="language-dropdown topbar-language" trigger="click" @command="changeLanguage">
           <el-button text class="language-toggle">
-            {{ locale === 'en' ? 'English' : '中文' }}
+            {{ locale === 'en' ? 'English' : '涓枃' }}
             <el-icon class="el-icon--right"><ArrowDown /></el-icon>
           </el-button>
           <template #dropdown>
             <el-dropdown-menu>
-              <el-dropdown-item command="zh-CN" :disabled="locale === 'zh-CN'">中文</el-dropdown-item>
+              <el-dropdown-item command="zh-CN" :disabled="locale === 'zh-CN'">涓枃</el-dropdown-item>
               <el-dropdown-item command="en" :disabled="locale === 'en'">English</el-dropdown-item>
             </el-dropdown-menu>
           </template>
@@ -126,29 +102,17 @@ onMounted(() => projects.loadProjects())
 
     <aside class="sidebar">
       <div class="brand">
-        <div class="brand-mark">IT</div>
+        <div class="brand-mark">ID</div>
         <div>
-          <strong>{{ activeSystemTitle }}</strong>
+          <strong>{{ t('platform.identity') }}</strong>
           <span>{{ t('platform.currentSystem') }}</span>
         </div>
       </div>
 
-      <el-menu :default-active="activeMenu" :collapse="sidebarCollapsed" router>
-        <el-menu-item index="/tickets">
-          <el-icon><Tickets /></el-icon>
-          <span>{{ t('nav.tickets') }}</span>
-        </el-menu-item>
-        <el-menu-item v-if="auth.hasPermission('ticket:create')" index="/tickets/new">
-          <el-icon><Plus /></el-icon>
-          <span>{{ t('nav.createTicket') }}</span>
-        </el-menu-item>
-        <el-menu-item v-if="auth.hasPermission('version:manage')" index="/admin/versions">
-          <el-icon><Collection /></el-icon>
-          <span>{{ t('nav.versions') }}</span>
-        </el-menu-item>
-        <el-menu-item v-if="auth.hasPermission('project:manage')" index="/admin/projects">
-          <el-icon><FolderOpened /></el-icon>
-          <span>{{ t('nav.projects') }}</span>
+      <el-menu default-active="/admin/users" :collapse="sidebarCollapsed" router>
+        <el-menu-item index="/admin/users">
+          <el-icon><User /></el-icon>
+          <span>{{ t('nav.users') }}</span>
         </el-menu-item>
       </el-menu>
       <div class="sidebar-footer">
@@ -167,24 +131,8 @@ onMounted(() => projects.loadProjects())
     <main class="content">
       <header class="topbar">
         <div>
-          <span class="eyebrow">WORKSPACE</span>
-          <h1>{{ route.meta.titleKey ? t(route.meta.titleKey) : t('app.workspace') }}</h1>
-        </div>
-        <div class="topbar-actions">
-          <el-select
-            v-model="projects.currentProjectId"
-            class="project-switcher"
-            :loading="projects.loading"
-            :placeholder="t('project.selectCurrent')"
-            @change="changeProject"
-          >
-            <el-option
-              v-for="project in projects.projects"
-              :key="project.id"
-              :label="`${project.name} (${project.code})`"
-              :value="project.id"
-            />
-          </el-select>
+          <span class="eyebrow">IDENTITY</span>
+          <h1>{{ route.meta.titleKey ? t(route.meta.titleKey) : t('platform.identity') }}</h1>
         </div>
       </header>
       <el-tabs
@@ -203,11 +151,7 @@ onMounted(() => projects.loadProjects())
         />
       </el-tabs>
       <div class="page-body">
-        <router-view v-slot="{ Component }">
-          <keep-alive>
-            <component :is="Component" :key="route.fullPath" />
-          </keep-alive>
-        </router-view>
+        <router-view />
       </div>
     </main>
   </div>
