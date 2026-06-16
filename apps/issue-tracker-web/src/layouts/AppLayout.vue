@@ -110,14 +110,14 @@ watch(
         <strong>{{ t('platform.title') }}</strong>
       </div>
       <nav class="system-switcher" :aria-label="t('platform.switchSystem')">
-        <router-link v-if="canReadTickets" :class="{ active: activeSystem === 'issue' }" to="/tickets">{{ t('platform.issue') }}</router-link>
-        <router-link
-          v-if="canManageUsers || canManageIdentity"
-          :class="{ active: activeSystem === 'identity' }"
-      :to="canManageUsers ? '/admin/users' : '/admin/identity'"
-    >
-      {{ t('platform.identity') }}
-    </router-link>
+        <router-link class="active" to="/tickets">{{ t('platform.issue') }}</router-link>
+        <a href="/travel/">{{ t('platform.travel') }}</a>
+        <a
+            v-if="auth.hasPermission('user:manage')"
+            href="/identity/"
+          >
+          {{ t('platform.identity') }}
+        </a>
   </nav>
       <div class="platform-user">
         <el-dropdown class="language-dropdown topbar-language" trigger="click" @command="changeLanguage">
