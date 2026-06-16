@@ -140,40 +140,6 @@ services:
         condition: service_healthy
     restart: unless-stopped
 
-<<<<<<< HEAD
-=======
-  travel-ticket:
-    build:
-      context: ./services/travel-ticket
-      dockerfile: Dockerfile
-    environment:
-      SERVER_PORT: 8090
-      DB_URL: jdbc:postgresql://postgres:5432/platform_travel
-      DB_USERNAME: platform
-      DB_PASSWORD: ${POSTGRES_PASSWORD:-platform}
-      REDIS_HOST: redis
-      REDIS_DATABASE: 2
-      ELASTICSEARCH_URIS: http://elasticsearch:9200
-      NACOS_SERVER_ADDR: nacos:8848
-      NACOS_ENABLED: "true"
-      SPRING_CLOUD_COMPATIBILITY_VERIFIER_ENABLED: "false"
-      JWT_SECRET: ${JWT_SECRET:-replace-with-a-production-secret-at-least-32-bytes}
-      JWT_ISSUER: identity-service
-      SPRING_FLYWAY_ENABLED: "false"
-    ports:
-      - "8090:8090"
-    depends_on:
-      postgres:
-        condition: service_healthy
-      redis:
-        condition: service_healthy
-      elasticsearch:
-        condition: service_healthy
-      nacos:
-        condition: service_healthy
-    restart: unless-stopped
-
->>>>>>> 8d4a0dd22c32f7596c9a1123e5b559292bcd79dd
   gateway:
     build:
       context: .
