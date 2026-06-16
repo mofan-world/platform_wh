@@ -79,12 +79,12 @@ function changeLanguage(command: string | number | object) {
       <div class="platform-user">
         <el-dropdown class="language-dropdown topbar-language" trigger="click" @command="changeLanguage">
           <el-button text class="language-toggle">
-            {{ locale === 'en' ? 'English' : '涓枃' }}
+            {{ locale === 'en' ? 'English' : '中文' }}
             <el-icon class="el-icon--right"><ArrowDown /></el-icon>
           </el-button>
           <template #dropdown>
             <el-dropdown-menu>
-              <el-dropdown-item command="zh-CN" :disabled="locale === 'zh-CN'">涓枃</el-dropdown-item>
+              <el-dropdown-item command="zh-CN" :disabled="locale === 'zh-CN'">中文</el-dropdown-item>
               <el-dropdown-item command="en" :disabled="locale === 'en'">English</el-dropdown-item>
             </el-dropdown-menu>
           </template>
