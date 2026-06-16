@@ -111,7 +111,6 @@ watch(
       </div>
       <nav class="system-switcher" :aria-label="t('platform.switchSystem')">
         <router-link class="active" to="/tickets">{{ t('platform.issue') }}</router-link>
-        <a href="/travel/">{{ t('platform.travel') }}</a>
         <a
             v-if="auth.hasPermission('user:manage')"
             href="/identity/"
