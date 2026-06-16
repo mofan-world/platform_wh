@@ -192,6 +192,7 @@ const travelMessages = {
       noEditPermission: "当前账号没有编辑车票权限",
       noDeletePermission: "当前账号没有删除车票权限",
       noReindexPermission: "当前账号没有重建索引权限",
+      sessionExpired: "登录状态已更新，请重新登录后再操作",
       updated: "车票已更新，并同步写入 Redis 与 ES",
       created: "车票已新增，并同步写入 Redis 与 ES",
       statusUpdated: "车票已更新为{status}",
@@ -398,6 +399,7 @@ const travelMessages = {
       noEditPermission: "This account cannot edit travel tickets",
       noDeletePermission: "This account cannot delete travel tickets",
       noReindexPermission: "This account cannot rebuild search indexes",
+      sessionExpired: "Your sign-in state changed. Please sign in again before continuing.",
       updated: "Ticket updated and synchronized to Redis and ES",
       created: "Ticket created and synchronized to Redis and ES",
       statusUpdated: "Ticket status updated to {status}",
@@ -878,8 +880,13 @@ createApp({
         headers,
         body: options.body ? JSON.stringify(options.body) : undefined,
       });
-      if ((response.status === 401 || response.status === 403) && !options.retried && await refreshPlatformSession()) {
-        return api(path, { ...options, retried: true });
+      if ((response.status === 401 || response.status === 403) && !options.retried) {
+        if (await refreshPlatformSession()) {
+          return api(path, { ...options, retried: true });
+        }
+        clearPlatformSession();
+        redirectToLogin();
+        throw new Error(t("message.sessionExpired"));
       }
       const payload = await response.json().catch(() => null);
       if (!response.ok || payload?.success === false) {
@@ -914,6 +921,19 @@ createApp({
       localStorage.setItem(PROFILE_KEY, JSON.stringify(session.user));
       currentUser.value = readPlatformUser();
       return true;
+    }
+
+    async function bootstrapSession() {
+      if (!currentUser.value) {
+        redirectToLogin();
+        return;
+      }
+      if (!await refreshPlatformSession()) {
+        clearPlatformSession();
+        redirectToLogin();
+        return;
+      }
+      await reloadData();
     }
 
     function clearPlatformSession() {
@@ -1307,13 +1327,7 @@ createApp({
       }).format(value || 0);
     }
 
-    onMounted(() => {
-      if (currentUser.value) {
-        reloadData();
-      } else {
-        redirectToLogin();
-      }
-    });
+    onMounted(bootstrapSession);
 
     return {
       apiBase,
