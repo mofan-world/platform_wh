@@ -25,7 +25,9 @@ function changeLanguage(command: string | number | object) {
 }
 
 async function navigateAfterAuth(redirect: string) {
-  const normalized = redirect === '/identity' || redirect === '/identity/' ? '/admin/identity' : redirect
+  const normalized = redirect === '/identity' || redirect === '/identity/' || redirect === '/admin/identity'
+    ? '/admin/identity/organizations'
+    : redirect
   if (normalized.startsWith('/admin/')) {
     await router.replace(normalized)
     return

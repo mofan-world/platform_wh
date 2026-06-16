@@ -6,8 +6,46 @@ declare module 'vue-router' {
     public?: boolean
     permission?: string
     titleKey?: string
+    identitySection?: string
   }
 }
+
+const identityManagementRoutes: RouteRecordRaw[] = [
+  {
+    path: 'admin/identity',
+    redirect: '/admin/identity/organizations',
+  },
+  {
+    path: 'admin/identity/organizations',
+    component: () => import('@/views/IdentityManagementView.vue'),
+    meta: { titleKey: 'nav.organizations', permission: 'identity:manage', identitySection: 'organizations' },
+  },
+  {
+    path: 'admin/identity/menus',
+    component: () => import('@/views/IdentityManagementView.vue'),
+    meta: { titleKey: 'nav.menus', permission: 'identity:manage', identitySection: 'menus' },
+  },
+  {
+    path: 'admin/identity/permissions',
+    component: () => import('@/views/IdentityManagementView.vue'),
+    meta: { titleKey: 'nav.permissions', permission: 'identity:manage', identitySection: 'permissions' },
+  },
+  {
+    path: 'admin/identity/roles-posts',
+    component: () => import('@/views/IdentityManagementView.vue'),
+    meta: { titleKey: 'nav.rolesPosts', permission: 'identity:manage', identitySection: 'roles-posts' },
+  },
+  {
+    path: 'admin/identity/modules',
+    component: () => import('@/views/IdentityManagementView.vue'),
+    meta: { titleKey: 'nav.modules', permission: 'identity:manage', identitySection: 'modules' },
+  },
+  {
+    path: 'admin/identity/dictionaries',
+    component: () => import('@/views/IdentityManagementView.vue'),
+    meta: { titleKey: 'nav.dictionaries', permission: 'identity:manage', identitySection: 'dictionaries' },
+  },
+]
 
 const routes: RouteRecordRaw[] = [
   {
@@ -30,11 +68,7 @@ const routes: RouteRecordRaw[] = [
         component: () => import('@/views/TicketDetailView.vue'),
         meta: { titleKey: 'nav.ticketDetail', permission: 'ticket:read:own' },
       },
-      {
-        path: 'admin/identity',
-        component: () => import('@/views/IdentityManagementView.vue'),
-        meta: { titleKey: 'nav.identityConfig', permission: 'identity:manage' },
-      },
+      ...identityManagementRoutes,
       {
         path: 'admin/versions',
         component: () => import('@/views/VersionManagementView.vue'),

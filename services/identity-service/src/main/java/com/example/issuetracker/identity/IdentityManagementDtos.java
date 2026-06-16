@@ -159,6 +159,18 @@ public final class IdentityManagementDtos {
     ) {
     }
 
+    public record NavigationMenuView(
+            Long id,
+            Long parentId,
+            String name,
+            String path,
+            String icon,
+            String permissionCode,
+            int sortOrder,
+            List<NavigationMenuView> children
+    ) {
+    }
+
     public record MenuRequest(
             Long parentId,
             Long moduleId,

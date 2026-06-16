@@ -9,6 +9,7 @@ import com.example.issuetracker.domain.Permission;
 import com.example.issuetracker.domain.Post;
 import com.example.issuetracker.domain.Role;
 import com.example.issuetracker.domain.ServiceModule;
+import com.example.issuetracker.domain.User;
 import com.example.issuetracker.identity.IdentityManagementDtos.DictionaryItemRequest;
 import com.example.issuetracker.identity.IdentityManagementDtos.DictionaryItemView;
 import com.example.issuetracker.identity.IdentityManagementDtos.DictionaryTypeRequest;
@@ -17,6 +18,7 @@ import com.example.issuetracker.identity.IdentityManagementDtos.MenuRequest;
 import com.example.issuetracker.identity.IdentityManagementDtos.MenuView;
 import com.example.issuetracker.identity.IdentityManagementDtos.ModuleRequest;
 import com.example.issuetracker.identity.IdentityManagementDtos.ModuleView;
+import com.example.issuetracker.identity.IdentityManagementDtos.NavigationMenuView;
 import com.example.issuetracker.identity.IdentityManagementDtos.OrganizationRequest;
 import com.example.issuetracker.identity.IdentityManagementDtos.OrganizationView;
 import com.example.issuetracker.identity.IdentityManagementDtos.PermissionRequest;
@@ -33,14 +35,18 @@ import com.example.issuetracker.repository.PermissionRepository;
 import com.example.issuetracker.repository.PostRepository;
 import com.example.issuetracker.repository.RoleRepository;
 import com.example.issuetracker.repository.ServiceModuleRepository;
+import com.example.issuetracker.security.CurrentUser;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 import java.util.Set;
 
 @Service
@@ -55,6 +61,7 @@ public class IdentityManagementService {
     private final MenuRepository menuRepository;
     private final DictionaryTypeRepository dictionaryTypeRepository;
     private final DictionaryItemRepository dictionaryItemRepository;
+    private final CurrentUser currentUser;
 
     @Transactional(readOnly = true)
     public List<OrganizationView> listOrganizations() {
@@ -214,6 +221,40 @@ public class IdentityManagementService {
                 .toList();
     }
 
+    @Transactional(readOnly = true)
+    public List<NavigationMenuView> listNavigationMenus(String moduleCode) {
+        User user = currentUser.require();
+        Set<String> permissions = currentUser.permissions(user);
+        boolean admin = user.getRoles().stream().anyMatch(role -> "ADMIN".equals(role.getCode()));
+        String normalizedModuleCode = moduleCode == null ? null : moduleCode.trim().toUpperCase(Locale.ROOT);
+
+        List<Menu> visibleMenus = menuRepository.findAll().stream()
+                .filter(Menu::isEnabled)
+                .filter(Menu::isVisible)
+                .filter(menu -> belongsToModule(menu, normalizedModuleCode))
+                .filter(menu -> canAccessMenu(menu, permissions, admin))
+                .sorted(Comparator.comparingInt(Menu::getSortOrder).thenComparing(Menu::getId))
+                .toList();
+
+        Map<Long, NavigationMenuNode> nodes = new LinkedHashMap<>();
+        for (Menu menu : visibleMenus) {
+            nodes.put(menu.getId(), new NavigationMenuNode(menu));
+        }
+
+        List<NavigationMenuNode> roots = new ArrayList<>();
+        for (NavigationMenuNode node : nodes.values()) {
+            Long parentId = node.menu.getParent() == null ? null : node.menu.getParent().getId();
+            NavigationMenuNode parent = parentId == null ? null : nodes.get(parentId);
+            if (parent == null) {
+                roots.add(node);
+            } else {
+                parent.children.add(node);
+            }
+        }
+
+        return roots.stream().map(this::toNavigationMenuView).toList();
+    }
+
     @Transactional
     public MenuView createMenu(MenuRequest request) {
         Menu menu = new Menu();
@@ -341,7 +382,9 @@ public class IdentityManagementService {
     }
 
     private void applyMenu(Menu menu, MenuRequest request) {
-        menu.setParent(request.parentId() == null ? null : requireMenu(request.parentId()));
+        Menu parent = request.parentId() == null ? null : requireMenu(request.parentId());
+        validateMenuParent(menu, parent);
+        menu.setParent(parent);
         menu.setModule(request.moduleId() == null ? null : requireModule(request.moduleId()));
         menu.setName(request.name().trim());
         menu.setPath(trimToNull(request.path()));
@@ -351,6 +394,42 @@ public class IdentityManagementService {
         menu.setSortOrder(request.sortOrder());
         menu.setVisible(request.visible());
         menu.setEnabled(request.enabled());
+    }
+
+    private void validateMenuParent(Menu menu, Menu parent) {
+        if (parent == null) {
+            return;
+        }
+        if (menu.getId() != null && parent.getId().equals(menu.getId())) {
+            throw BusinessException.badRequest("INVALID_PARENT", "上级菜单不能选择自身");
+        }
+        if (menu.getId() != null && isDescendantOf(parent, menu)) {
+            throw BusinessException.badRequest("INVALID_PARENT", "上级菜单不能选择当前菜单的下级菜单");
+        }
+        if (menuDepth(parent) >= 3) {
+            throw BusinessException.badRequest("MENU_DEPTH_LIMIT", "菜单最多只能有三级");
+        }
+    }
+
+    private boolean isDescendantOf(Menu candidate, Menu ancestor) {
+        Menu current = candidate;
+        while (current != null) {
+            if (current.getParent() != null && current.getParent().getId().equals(ancestor.getId())) {
+                return true;
+            }
+            current = current.getParent();
+        }
+        return false;
+    }
+
+    private int menuDepth(Menu menu) {
+        int depth = 1;
+        Menu current = menu;
+        while (current.getParent() != null) {
+            depth++;
+            current = current.getParent();
+        }
+        return depth;
     }
 
     private void applyDictionaryType(DictionaryType type, DictionaryTypeRequest request) {
@@ -563,6 +642,52 @@ public class IdentityManagementService {
         );
     }
 
+    private NavigationMenuView toNavigationMenuView(NavigationMenuNode node) {
+        Menu menu = node.menu;
+        Menu parent = menu.getParent();
+        return new NavigationMenuView(
+                menu.getId(),
+                parent == null ? null : parent.getId(),
+                menu.getName(),
+                menu.getPath(),
+                menu.getIcon(),
+                menu.getPermissionCode(),
+                menu.getSortOrder(),
+                node.children.stream().map(this::toNavigationMenuView).toList()
+        );
+    }
+
+    private boolean belongsToModule(Menu menu, String moduleCode) {
+        if (moduleCode == null || moduleCode.isBlank()) {
+            return true;
+        }
+        ServiceModule module = menu.getModule();
+        return module != null && moduleCode.equalsIgnoreCase(module.getCode());
+    }
+
+    private boolean canAccessMenu(Menu menu, Set<String> permissions, boolean admin) {
+        if (admin) {
+            return true;
+        }
+        String permissionCode = menu.getPermissionCode();
+        if (permissionCode == null || permissionCode.isBlank()) {
+            return true;
+        }
+        for (String candidate : permissionCode.split("[,;|\\s]+")) {
+            if (candidate.isBlank()) {
+                continue;
+            }
+            if (permissions.contains(candidate) || hasPermissionAlias(candidate, permissions)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private boolean hasPermissionAlias(String permission, Set<String> permissions) {
+        return "ticket:read:own".equals(permission) && permissions.contains("ticket:read:all");
+    }
+
     private DictionaryTypeView toDictionaryTypeView(DictionaryType type) {
         return new DictionaryTypeView(
                 type.getId(),
@@ -600,5 +725,14 @@ public class IdentityManagementService {
             return null;
         }
         return value.trim();
+    }
+
+    private static final class NavigationMenuNode {
+        private final Menu menu;
+        private final List<NavigationMenuNode> children = new ArrayList<>();
+
+        private NavigationMenuNode(Menu menu) {
+            this.menu = menu;
+        }
     }
 }

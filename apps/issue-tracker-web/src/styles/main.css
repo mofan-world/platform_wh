@@ -222,11 +222,20 @@ h1, h2, p {
   font-weight: 700;
 }
 
+.sidebar .el-sub-menu__title {
+  height: 44px;
+  margin-bottom: 4px;
+  border-radius: 10px;
+  color: #243244;
+  font-weight: 700;
+}
+
 .sidebar .el-menu--collapse {
   width: 48px;
 }
 
 .sidebar .el-menu-item:hover,
+.sidebar .el-sub-menu__title:hover,
 .sidebar .el-menu-item.is-active {
   color: #2457e6;
   background: #e9eeff;
@@ -563,15 +572,18 @@ h1, h2, p {
   margin-left: auto;
 }
 
-.identity-tabs {
+.identity-tabs,
+.identity-section {
   margin-top: 8px;
 }
 
-.identity-tabs .sub-heading {
+.identity-tabs .sub-heading,
+.identity-section .sub-heading {
   margin-bottom: 18px;
 }
 
-.identity-tabs .sub-heading h2 {
+.identity-tabs .sub-heading h2,
+.identity-section .sub-heading h2 {
   margin: 0;
 }
 

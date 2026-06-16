@@ -61,7 +61,7 @@ public class GatewayServer {
                 return;
             }
             if ("/identity".equals(path)) {
-                exchange.getResponseHeaders().set("Location", "/admin/identity");
+                exchange.getResponseHeaders().set("Location", "/admin/identity/organizations");
                 exchange.sendResponseHeaders(302, -1);
                 exchange.close();
                 return;
@@ -86,6 +86,7 @@ public class GatewayServer {
 
     private static boolean isIdentityPath(String path) {
         return path.startsWith("/api/auth/")
+                || path.startsWith("/api/navigation/")
                 || path.equals("/api/admin/users")
                 || path.startsWith("/api/admin/users/")
                 || path.equals("/api/admin/roles")

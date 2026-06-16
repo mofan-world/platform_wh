@@ -6,17 +6,55 @@ declare module 'vue-router' {
     public?: boolean
     permission?: string
     titleKey?: string
+    identitySection?: string
   }
 }
+
+const identityManagementRoutes: RouteRecordRaw[] = [
+  {
+    path: 'admin/identity',
+    redirect: '/admin/identity/organizations',
+  },
+  {
+    path: 'admin/identity/organizations',
+    component: () => import('@/views/IdentityManagementView.vue'),
+    meta: { titleKey: 'nav.organizations', permission: 'identity:manage', identitySection: 'organizations' },
+  },
+  {
+    path: 'admin/identity/menus',
+    component: () => import('@/views/IdentityManagementView.vue'),
+    meta: { titleKey: 'nav.menus', permission: 'identity:manage', identitySection: 'menus' },
+  },
+  {
+    path: 'admin/identity/permissions',
+    component: () => import('@/views/IdentityManagementView.vue'),
+    meta: { titleKey: 'nav.permissions', permission: 'identity:manage', identitySection: 'permissions' },
+  },
+  {
+    path: 'admin/identity/roles-posts',
+    component: () => import('@/views/IdentityManagementView.vue'),
+    meta: { titleKey: 'nav.rolesPosts', permission: 'identity:manage', identitySection: 'roles-posts' },
+  },
+  {
+    path: 'admin/identity/modules',
+    component: () => import('@/views/IdentityManagementView.vue'),
+    meta: { titleKey: 'nav.modules', permission: 'identity:manage', identitySection: 'modules' },
+  },
+  {
+    path: 'admin/identity/dictionaries',
+    component: () => import('@/views/IdentityManagementView.vue'),
+    meta: { titleKey: 'nav.dictionaries', permission: 'identity:manage', identitySection: 'dictionaries' },
+  },
+]
 
 const routes: RouteRecordRaw[] = [
   {
     path: '/identity',
-    redirect: '/admin/identity',
+    redirect: '/admin/identity/organizations',
   },
   {
     path: '/identity/',
-    redirect: '/admin/identity',
+    redirect: '/admin/identity/organizations',
   },
   {
     path: '/login',
@@ -31,13 +69,9 @@ const routes: RouteRecordRaw[] = [
   {
     path: '/',
     component: () => import('@/layouts/AppLayout.vue'),
-    redirect: '/admin/identity',
+    redirect: '/admin/identity/organizations',
     children: [
-      {
-        path: 'admin/identity',
-        component: () => import('@/views/IdentityManagementView.vue'),
-        meta: { titleKey: 'nav.identityConfig', permission: 'identity:manage' },
-      },
+      ...identityManagementRoutes,
       {
         path: 'admin/users',
         component: () => import('@/views/UserManagementView.vue'),
@@ -45,7 +79,7 @@ const routes: RouteRecordRaw[] = [
       },
     ],
   },
-  { path: '/:pathMatch(.*)*', redirect: '/admin/identity' },
+  { path: '/:pathMatch(.*)*', redirect: '/admin/identity/organizations' },
 ]
 
 const router = createRouter({
@@ -65,7 +99,7 @@ function canAccessPermission(auth: ReturnType<typeof useAuthStore>, permission: 
 router.beforeEach(async (to) => {
   const auth = useAuthStore()
   if (to.meta.public) {
-    return auth.authenticated && (to.path === '/login' || to.path === '/register') ? '/admin/identity' : true
+    return auth.authenticated && (to.path === '/login' || to.path === '/register') ? '/admin/identity/organizations' : true
   }
   if (!auth.authenticated) return { path: '/login', query: { redirect: to.fullPath } }
   if (!auth.user) {

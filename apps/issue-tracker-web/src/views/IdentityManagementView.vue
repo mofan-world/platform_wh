@@ -1,10 +1,12 @@
 <script setup lang="ts">
 import { computed, onMounted, reactive, ref, watch } from 'vue'
+import { useRoute } from 'vue-router'
 import { ElMessage, ElMessageBox, type FormInstance, type FormRules } from 'element-plus'
 import { Plus } from '@element-plus/icons-vue'
 import { errorMessage, http } from '@/api/http'
 
 type ResourceKind = 'organization' | 'module' | 'permission' | 'role' | 'post' | 'menu' | 'dictType' | 'dictItem'
+type SectionName = 'organizations' | 'menus' | 'permissions' | 'roles-posts' | 'modules' | 'dictionaries'
 
 interface OrganizationView {
   id: number
@@ -97,9 +99,9 @@ interface DictionaryItemView {
   enabled: boolean
 }
 
+const route = useRoute()
 const loading = ref(false)
 const saving = ref(false)
-const activeTab = ref('organizations')
 const formRef = ref<FormInstance>()
 const dialogVisible = ref(false)
 const dialogKind = ref<ResourceKind>('organization')
@@ -163,6 +165,27 @@ const dialogTitle = computed(() => `${editingId.value ? '编辑' : '新增'}${la
 const selectedDictionaryType = computed(() =>
   dictionaryTypes.value.find((item) => item.id === selectedDictionaryTypeId.value),
 )
+const availableParentMenus = computed(() =>
+  menus.value.filter((menu) =>
+    menu.id !== editingId.value
+    && menuDepth(menu) < 3
+    && !isMenuDescendant(menu.id, editingId.value),
+  ),
+)
+const sectionTitles: Record<SectionName, string> = {
+  organizations: '组织机构管理',
+  menus: '菜单管理',
+  permissions: '权限管理',
+  'roles-posts': '角色岗位管理',
+  modules: '微服务模块管理',
+  dictionaries: '字典管理',
+}
+const activeSection = computed<SectionName>(() => {
+  const value = route.meta.identitySection
+  return typeof value === 'string' && sectionTitles[value as SectionName]
+    ? value as SectionName
+    : 'organizations'
+})
 
 function resetForm() {
   editingId.value = undefined
@@ -389,6 +412,28 @@ function selectDictionaryType(row?: DictionaryTypeView) {
   selectedDictionaryTypeId.value = row?.id
 }
 
+function menuDepth(menu: MenuView) {
+  let depth = 1
+  let parentId = menu.parentId
+  while (parentId) {
+    const parent = menus.value.find((item) => item.id === parentId)
+    if (!parent) break
+    depth += 1
+    parentId = parent.parentId
+  }
+  return depth
+}
+
+function isMenuDescendant(candidateId: number, ancestorId?: number) {
+  if (!ancestorId) return false
+  let current = menus.value.find((item) => item.id === candidateId)
+  while (current?.parentId) {
+    if (current.parentId === ancestorId) return true
+    current = menus.value.find((item) => item.id === current?.parentId)
+  }
+  return false
+}
+
 watch(selectedDictionaryTypeId, () => {
   loadDictionaryItems().catch((error) => ElMessage.error(errorMessage(error)))
 })
@@ -403,12 +448,12 @@ onMounted(() => {
     <div class="section-heading compact">
       <div>
         <span class="eyebrow">SYSTEM MANAGEMENT</span>
-        <h2>系统管理配置</h2>
+        <h2>{{ sectionTitles[activeSection] }}</h2>
       </div>
     </div>
 
-    <el-tabs v-model="activeTab" class="identity-tabs">
-      <el-tab-pane label="组织机构" name="organizations">
+    <div class="identity-section">
+      <template v-if="activeSection === 'organizations'">
         <div class="section-heading compact sub-heading">
           <h2>组织机构管理</h2>
           <el-button type="primary" :icon="Plus" @click="openCreate('organization')">新增组织</el-button>
@@ -430,9 +475,9 @@ onMounted(() => {
             </template>
           </el-table-column>
         </el-table>
-      </el-tab-pane>
+      </template>
 
-      <el-tab-pane label="菜单管理" name="menus">
+      <template v-else-if="activeSection === 'menus'">
         <div class="section-heading compact sub-heading">
           <h2>菜单管理</h2>
           <el-button type="primary" :icon="Plus" @click="openCreate('menu')">新增菜单</el-button>
@@ -441,7 +486,8 @@ onMounted(() => {
           <el-table-column prop="name" label="名称" min-width="150" />
           <el-table-column prop="moduleName" label="所属模块" min-width="150" />
           <el-table-column prop="parentName" label="上级菜单" min-width="140" />
-          <el-table-column prop="path" label="路径" min-width="180" show-overflow-tooltip />
+          <el-table-column prop="path" label="网关路由" min-width="180" show-overflow-tooltip />
+          <el-table-column prop="component" label="前端组件" min-width="160" show-overflow-tooltip />
           <el-table-column prop="permissionCode" label="权限标识" min-width="170" show-overflow-tooltip />
           <el-table-column prop="sortOrder" label="排序" width="80" />
           <el-table-column label="可见" width="80">
@@ -457,9 +503,9 @@ onMounted(() => {
             </template>
           </el-table-column>
         </el-table>
-      </el-tab-pane>
+      </template>
 
-      <el-tab-pane label="权限管理" name="permissions">
+      <template v-else-if="activeSection === 'permissions'">
         <div class="section-heading compact sub-heading">
           <h2>权限管理</h2>
           <el-button type="primary" :icon="Plus" @click="openCreate('permission')">新增权限</el-button>
@@ -480,9 +526,9 @@ onMounted(() => {
             </template>
           </el-table-column>
         </el-table>
-      </el-tab-pane>
+      </template>
 
-      <el-tab-pane label="角色岗位" name="roles-posts">
+      <template v-else-if="activeSection === 'roles-posts'">
         <div class="identity-split">
           <div>
             <div class="section-heading compact sub-heading">
@@ -527,9 +573,9 @@ onMounted(() => {
             </el-table>
           </div>
         </div>
-      </el-tab-pane>
+      </template>
 
-      <el-tab-pane label="微服务模块" name="modules">
+      <template v-else-if="activeSection === 'modules'">
         <div class="section-heading compact sub-heading">
           <h2>微服务模块管理</h2>
           <el-button type="primary" :icon="Plus" @click="openCreate('module')">新增模块</el-button>
@@ -550,9 +596,9 @@ onMounted(() => {
             </template>
           </el-table-column>
         </el-table>
-      </el-tab-pane>
+      </template>
 
-      <el-tab-pane label="字典管理" name="dictionaries">
+      <template v-else>
         <div class="identity-split dictionaries">
           <div>
             <div class="section-heading compact sub-heading">
@@ -594,8 +640,8 @@ onMounted(() => {
             </el-table>
           </div>
         </div>
-      </el-tab-pane>
-    </el-tabs>
+      </template>
+    </div>
 
     <el-dialog v-model="dialogVisible" :title="dialogTitle" width="720px" @closed="resetForm">
       <el-form ref="formRef" :model="form" :rules="rules" label-position="top">
@@ -661,7 +707,7 @@ onMounted(() => {
           <div class="form-grid">
             <el-form-item label="上级菜单">
               <el-select v-model="form.parentId" clearable filterable class="full-width">
-                <el-option v-for="item in menus" :key="item.id" :label="item.name" :value="item.id" />
+                <el-option v-for="item in availableParentMenus" :key="item.id" :label="item.name" :value="item.id" />
               </el-select>
             </el-form-item>
             <el-form-item label="权限标识">
@@ -671,8 +717,8 @@ onMounted(() => {
             </el-form-item>
           </div>
           <div class="form-grid">
-            <el-form-item label="路径"><el-input v-model="form.path" placeholder="/admin/identity" /></el-form-item>
-            <el-form-item label="组件"><el-input v-model="form.component" /></el-form-item>
+            <el-form-item label="网关路由"><el-input v-model="form.path" placeholder="/admin/identity/menus" /></el-form-item>
+            <el-form-item label="前端组件"><el-input v-model="form.component" placeholder="IdentityManagementView" /></el-form-item>
           </div>
           <el-form-item label="图标"><el-input v-model="form.icon" /></el-form-item>
         </template>

@@ -1,8 +1,25 @@
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { ArrowDown, Expand, Fold, Setting, SwitchButton, User } from '@element-plus/icons-vue'
+import {
+  Collection,
+  Expand,
+  Fold,
+  FolderOpened,
+  Grid,
+  Key,
+  Menu as MenuIcon,
+  OfficeBuilding,
+  Plus,
+  Setting,
+  SwitchButton,
+  Tickets,
+  User,
+  UserFilled,
+  ArrowDown,
+} from '@element-plus/icons-vue'
 import { useAuthStore } from '@/stores/auth'
+import { http } from '@/api/http'
 import { setAppLocale, useAppI18n } from '@/i18n'
 
 const route = useRoute()
@@ -16,17 +33,43 @@ interface WorkspaceTab {
   closable: boolean
 }
 
+interface NavigationMenu {
+  id: number
+  parentId?: number | null
+  name: string
+  path?: string | null
+  icon?: string | null
+  permissionCode?: string | null
+  sortOrder: number
+  children: NavigationMenu[]
+}
+
 const tabs = ref<WorkspaceTab[]>([])
 const activeTab = ref(route.fullPath)
 const sidebarCollapsed = ref(localStorage.getItem('platform-identity-sidebar-collapsed') === 'true')
+const sidebarMenus = ref<NavigationMenu[]>([])
 const userRoles = computed(() => auth.user?.roles?.join(' / ') || t('platform.userRoles'))
 const canManageUsers = computed(() => auth.hasPermission('user:manage'))
 const canManageIdentity = computed(() => auth.hasPermission('identity:manage') || auth.user?.roles.includes('ADMIN'))
-const systemManagementHome = computed(() => canManageIdentity.value ? '/admin/identity' : '/admin/users')
+const systemManagementHome = computed(() => canManageIdentity.value ? '/admin/identity/organizations' : '/admin/users')
 const activeMenu = computed(() => {
-  if (route.path.startsWith('/admin/identity')) return '/admin/identity'
-  return '/admin/users'
+  if (route.path === '/admin/identity') return '/admin/identity/organizations'
+  return route.path
 })
+
+const menuIconMap = {
+  Collection,
+  FolderOpened,
+  Grid,
+  Key,
+  Menu: MenuIcon,
+  OfficeBuilding,
+  Plus,
+  Setting,
+  Tickets,
+  User,
+  UserFilled,
+}
 
 watch(
   () => route.fullPath,
@@ -70,6 +113,26 @@ function changeLanguage(command: string | number | object) {
   const nextLocale = command === 'en' ? 'en' : 'zh-CN'
   setAppLocale(nextLocale)
 }
+
+function iconFor(name?: string | null) {
+  return menuIconMap[name as keyof typeof menuIconMap] || Setting
+}
+
+async function loadSidebarMenus() {
+  const { data } = await http.get<NavigationMenu[]>('/api/navigation/menus', {
+    params: { module: 'IDENTITY' },
+  })
+  sidebarMenus.value = data
+}
+
+watch(
+  () => `${auth.user?.roles.join('|') || ''}:${auth.user?.permissions.join('|') || ''}`,
+  () => {
+    if (auth.authenticated) loadSidebarMenus().catch(() => { sidebarMenus.value = [] })
+    else sidebarMenus.value = []
+  },
+  { immediate: true },
+)
 </script>
 
 <template>
@@ -116,14 +179,47 @@ function changeLanguage(command: string | number | object) {
       </div>
 
       <el-menu :default-active="activeMenu" :collapse="sidebarCollapsed" router>
-        <el-menu-item v-if="canManageIdentity" index="/admin/identity">
-          <el-icon><Setting /></el-icon>
-          <span>{{ t('nav.identityConfig') }}</span>
-        </el-menu-item>
-        <el-menu-item v-if="canManageUsers" index="/admin/users">
-          <el-icon><User /></el-icon>
-          <span>{{ t('nav.users') }}</span>
-        </el-menu-item>
+        <template v-for="item in sidebarMenus" :key="item.id">
+          <el-sub-menu v-if="item.children.length" :index="item.path || `menu-${item.id}`">
+            <template #title>
+              <el-icon><component :is="iconFor(item.icon)" /></el-icon>
+              <span>{{ item.name }}</span>
+            </template>
+            <template v-for="child in item.children" :key="child.id">
+              <el-sub-menu v-if="child.children.length" :index="child.path || `menu-${child.id}`">
+                <template #title>
+                  <el-icon><component :is="iconFor(child.icon)" /></el-icon>
+                  <span>{{ child.name }}</span>
+                </template>
+                <el-menu-item
+                  v-for="grandchild in child.children"
+                  :key="grandchild.id"
+                  :index="grandchild.path || `menu-${grandchild.id}`"
+                  :disabled="!grandchild.path"
+                >
+                  <el-icon><component :is="iconFor(grandchild.icon)" /></el-icon>
+                  <span>{{ grandchild.name }}</span>
+                </el-menu-item>
+              </el-sub-menu>
+              <el-menu-item
+                v-else
+                :index="child.path || `menu-${child.id}`"
+                :disabled="!child.path"
+              >
+                <el-icon><component :is="iconFor(child.icon)" /></el-icon>
+                <span>{{ child.name }}</span>
+              </el-menu-item>
+            </template>
+          </el-sub-menu>
+          <el-menu-item
+            v-else
+            :index="item.path || `menu-${item.id}`"
+            :disabled="!item.path"
+          >
+            <el-icon><component :is="iconFor(item.icon)" /></el-icon>
+            <span>{{ item.name }}</span>
+          </el-menu-item>
+        </template>
       </el-menu>
       <div class="sidebar-footer">
         <el-button

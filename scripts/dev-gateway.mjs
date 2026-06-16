@@ -84,6 +84,7 @@ async function serveStatic(response, base, pathname, fallbackToIndex) {
 
 function isIdentityPath(pathname) {
   return pathname.startsWith("/api/auth/")
+    || pathname.startsWith("/api/navigation/")
     || pathname === "/api/admin/users"
     || pathname.startsWith("/api/admin/users/")
     || pathname === "/api/admin/roles"
@@ -112,7 +113,7 @@ createServer(async (request, response) => {
     return;
   }
   if (url.pathname === "/identity") {
-    response.writeHead(302, { Location: "/admin/identity" });
+    response.writeHead(302, { Location: "/admin/identity/organizations" });
     response.end();
     return;
   }
