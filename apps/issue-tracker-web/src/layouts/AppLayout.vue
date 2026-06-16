@@ -114,11 +114,11 @@ watch(
         <router-link
           v-if="canManageUsers || canManageIdentity"
           :class="{ active: activeSystem === 'identity' }"
-          :to="canManageUsers ? '/admin/users' : '/admin/identity'"
-        >
-          {{ t('platform.identity') }}
-        </a>
-      </nav>
+      :to="canManageUsers ? '/admin/users' : '/admin/identity'"
+    >
+      {{ t('platform.identity') }}
+    </router-link>
+  </nav>
       <div class="platform-user">
         <el-dropdown class="language-dropdown topbar-language" trigger="click" @command="changeLanguage">
           <el-button text class="language-toggle">
