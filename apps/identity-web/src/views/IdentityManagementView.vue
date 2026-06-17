@@ -445,12 +445,6 @@ onMounted(() => {
 
 <template>
   <section class="panel identity-management">
-    <div class="section-heading compact">
-      <div>
-        <span class="eyebrow">SYSTEM MANAGEMENT</span>
-        <h2>{{ sectionTitles[activeSection] }}</h2>
-      </div>
-    </div>
 
     <div class="identity-section">
       <template v-if="activeSection === 'organizations'">
