@@ -1,6 +1,8 @@
 package com.example.issuetracker.admin;
 
 import com.example.issuetracker.admin.AdminDtos.RoleView;
+import com.example.issuetracker.admin.AdminDtos.OrganizationOption;
+import com.example.issuetracker.admin.AdminDtos.PostOption;
 import com.example.issuetracker.admin.AdminDtos.CreateUserRequest;
 import com.example.issuetracker.admin.AdminDtos.UpdateUserRequest;
 import com.example.issuetracker.admin.AdminDtos.UpdateEnabledRequest;
@@ -75,6 +77,18 @@ public class AdminController {
     @PreAuthorize("hasAuthority('user:manage')")
     public List<RoleView> roles() {
         return adminService.listRoles();
+    }
+
+    @GetMapping("/api/admin/users/options/organizations")
+    @PreAuthorize("hasAuthority('user:manage')")
+    public List<OrganizationOption> organizationOptions() {
+        return adminService.listOrganizationOptions();
+    }
+
+    @GetMapping("/api/admin/users/options/posts")
+    @PreAuthorize("hasAuthority('user:manage')")
+    public List<PostOption> postOptions() {
+        return adminService.listPostOptions();
     }
 
     @PutMapping("/api/admin/users/{id}/roles")

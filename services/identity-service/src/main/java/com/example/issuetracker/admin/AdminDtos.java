@@ -19,6 +19,12 @@ public final class AdminDtos {
     public record RoleView(Long id, String code, String name, List<String> permissions) {
     }
 
+    public record OrganizationOption(Long id, String code, String name) {
+    }
+
+    public record PostOption(Long id, String code, String name) {
+    }
+
     public record UserView(
             Long id,
             String username,
@@ -26,6 +32,10 @@ public final class AdminDtos {
             String displayName,
             boolean enabled,
             List<String> roles,
+            Long organizationId,
+            String organizationName,
+            Long postId,
+            String postName,
             Instant createdAt
     ) {
     }
@@ -47,6 +57,8 @@ public final class AdminDtos {
             @Pattern(regexp = "^(?=.*[A-Za-z])(?=.*\\d).+$", message = "密码必须同时包含字母和数字")
             String password,
             boolean enabled,
+            @NotNull Long organizationId,
+            @NotNull Long postId,
             @NotEmpty Set<@NotNull Long> roleIds
     ) {
     }
@@ -61,6 +73,8 @@ public final class AdminDtos {
             @Pattern(regexp = "^(?=.*[A-Za-z])(?=.*\\d).+$", message = "密码必须同时包含字母和数字")
             String password,
             boolean enabled,
+            @NotNull Long organizationId,
+            @NotNull Long postId,
             @NotEmpty Set<@NotNull Long> roleIds
     ) {
     }

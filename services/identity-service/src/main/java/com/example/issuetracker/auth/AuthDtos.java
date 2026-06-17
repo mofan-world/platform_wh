@@ -51,6 +51,10 @@ public final class AuthDtos {
             String username,
             String email,
             String displayName,
+            Long organizationId,
+            String organizationName,
+            Long postId,
+            String postName,
             List<String> roles,
             List<String> permissions
     ) {

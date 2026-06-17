@@ -158,7 +158,6 @@ const rules: FormRules = {
   name: [{ required: true, message: '请输入名称', trigger: 'blur' }],
   label: [{ required: true, message: '请输入标签', trigger: 'blur' }],
   value: [{ required: true, message: '请输入字典值', trigger: 'blur' }],
-  permissionIds: [{ type: 'array', required: true, min: 1, message: '请至少选择一个权限', trigger: 'change' }],
 }
 
 const dialogTitle = computed(() => `${editingId.value ? '编辑' : '新增'}${labels[dialogKind.value]}`)

@@ -1,6 +1,8 @@
 package com.example.issuetracker.admin;
 
 import com.example.issuetracker.admin.AdminDtos.RoleView;
+import com.example.issuetracker.admin.AdminDtos.OrganizationOption;
+import com.example.issuetracker.admin.AdminDtos.PostOption;
 import com.example.issuetracker.admin.AdminDtos.CreateUserRequest;
 import com.example.issuetracker.admin.AdminDtos.UpdateUserRequest;
 import com.example.issuetracker.admin.AdminDtos.UpdateEnabledRequest;
@@ -9,8 +11,12 @@ import com.example.issuetracker.admin.AdminDtos.UserOption;
 import com.example.issuetracker.admin.AdminDtos.UserView;
 import com.example.issuetracker.common.BusinessException;
 import com.example.issuetracker.domain.Permission;
+import com.example.issuetracker.domain.Organization;
+import com.example.issuetracker.domain.Post;
 import com.example.issuetracker.domain.Role;
 import com.example.issuetracker.domain.User;
+import com.example.issuetracker.repository.OrganizationRepository;
+import com.example.issuetracker.repository.PostRepository;
 import com.example.issuetracker.repository.RoleRepository;
 import com.example.issuetracker.repository.UserRepository;
 import com.example.issuetracker.security.CurrentUser;
@@ -27,6 +33,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Set;
+import java.util.Comparator;
 import java.time.Instant;
 
 @Service
@@ -35,6 +42,8 @@ public class AdminService {
 
     private final UserRepository userRepository;
     private final RoleRepository roleRepository;
+    private final OrganizationRepository organizationRepository;
+    private final PostRepository postRepository;
     private final CurrentUser currentUser;
     private final PasswordEncoder passwordEncoder;
     private final DefaultProjectMembershipService defaultProjectMembershipService;
@@ -73,6 +82,8 @@ public class AdminService {
         user.setDisplayName(request.displayName().trim());
         user.setPasswordHash(passwordEncoder.encode(request.password()));
         user.setEnabled(request.enabled());
+        user.setOrganization(resolveOrganization(request.organizationId()));
+        user.setPost(resolvePost(request.postId()));
         user.setRoles(requireRoles(request.roleIds()));
         userRepository.save(user);
         defaultProjectMembershipService.addToDefaultProject(user);
@@ -91,6 +102,8 @@ public class AdminService {
         user.setEmail(email);
         user.setDisplayName(request.displayName().trim());
         user.setEnabled(request.enabled());
+        user.setOrganization(resolveOrganization(request.organizationId()));
+        user.setPost(resolvePost(request.postId()));
         user.setRoles(roles);
         if (request.password() != null && !request.password().isBlank()) {
             user.setPasswordHash(passwordEncoder.encode(request.password()));
@@ -118,6 +131,31 @@ public class AdminService {
                         role.getCode(),
                         role.getName(),
                         role.getPermissions().stream().map(Permission::getCode).sorted().toList()
+                ))
+                .toList();
+    }
+
+    @Transactional(readOnly = true)
+    public List<OrganizationOption> listOrganizationOptions() {
+        return organizationRepository.findAll().stream()
+                .filter(Organization::isEnabled)
+                .sorted(Comparator.comparingInt(Organization::getSortOrder).thenComparing(Organization::getId))
+                .map(organization -> new OrganizationOption(
+                        organization.getId(),
+                        organization.getCode(),
+                        organization.getName()
+                ))
+                .toList();
+    }
+
+    @Transactional(readOnly = true)
+    public List<PostOption> listPostOptions() {
+        return postRepository.findAll(Sort.by("sortOrder").and(Sort.by("id"))).stream()
+                .filter(Post::isEnabled)
+                .map(post -> new PostOption(
+                        post.getId(),
+                        post.getCode(),
+                        post.getName()
                 ))
                 .toList();
     }
@@ -179,6 +217,22 @@ public class AdminService {
         return new HashSet<>(roles);
     }
 
+    private Organization resolveOrganization(Long organizationId) {
+        if (organizationId == null) {
+            return null;
+        }
+        return organizationRepository.findById(organizationId)
+                .orElseThrow(() -> BusinessException.badRequest("INVALID_ORGANIZATION", "组织机构不存在"));
+    }
+
+    private Post resolvePost(Long postId) {
+        if (postId == null) {
+            return null;
+        }
+        return postRepository.findById(postId)
+                .orElseThrow(() -> BusinessException.badRequest("INVALID_POST", "岗位不存在"));
+    }
+
     private void requireUnique(String username, String email, Long userId) {
         boolean usernameExists = userId == null
                 ? userRepository.existsByUsernameIgnoreCase(username)
@@ -219,6 +273,8 @@ public class AdminService {
     }
 
     private UserView toUserView(User user) {
+        Organization organization = user.getOrganization();
+        Post post = user.getPost();
         return new UserView(
                 user.getId(),
                 user.getUsername(),
@@ -226,6 +282,10 @@ public class AdminService {
                 user.getDisplayName(),
                 user.isEnabled(),
                 user.getRoles().stream().map(Role::getCode).sorted().toList(),
+                organization == null ? null : organization.getId(),
+                organization == null ? null : organization.getName(),
+                post == null ? null : post.getId(),
+                post == null ? null : post.getName(),
                 user.getCreatedAt()
         );
     }

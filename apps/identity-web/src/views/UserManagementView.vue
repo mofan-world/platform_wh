@@ -15,6 +15,18 @@ interface Role {
   permissions: string[]
 }
 
+interface OrganizationOption {
+  id: number
+  code: string
+  name: string
+}
+
+interface PostOption {
+  id: number
+  code: string
+  name: string
+}
+
 interface User {
   id: number
   username: string
@@ -22,6 +34,10 @@ interface User {
   displayName: string
   enabled: boolean
   roles: string[]
+  organizationId?: number | null
+  organizationName?: string | null
+  postId?: number | null
+  postName?: string | null
   createdAt: string
 }
 
@@ -31,6 +47,8 @@ const loading = ref(false)
 const saving = ref(false)
 const users = ref<User[]>([])
 const roles = ref<Role[]>([])
+const organizations = ref<OrganizationOption[]>([])
+const posts = ref<PostOption[]>([])
 const total = ref(0)
 const query = reactive({ keyword: '', page: 1, size: 20 })
 const dialogVisible = ref(false)
@@ -42,6 +60,8 @@ const form = reactive({
   displayName: '',
   password: '',
   enabled: true,
+  organizationId: undefined as number | undefined,
+  postId: undefined as number | undefined,
   roleIds: [] as number[],
 })
 const dialogTitle = computed(() => editingId.value ? t('user.edit') : t('user.add'))
@@ -55,6 +75,8 @@ const rules = computed<FormRules>(() => ({
     { type: 'email', message: t('user.emailInvalid'), trigger: 'blur' },
   ],
   displayName: [{ required: true, message: t('user.displayNameRequired'), trigger: 'blur' }],
+  organizationId: [{ required: true, message: t('user.organizationRequired'), trigger: 'change' }],
+  postId: [{ required: true, message: t('user.postRequired'), trigger: 'change' }],
   password: [{
     validator: (_rule, value, callback) => {
       if (!editingId.value && !value) {
@@ -80,11 +102,13 @@ function format(path: string, vars: Record<string, string | number>) {
 async function load() {
   loading.value = true
   try {
-    const [usersResult, rolesResult] = await Promise.allSettled([
+    const [usersResult, rolesResult, organizationsResult, postsResult] = await Promise.allSettled([
       http.get<PageResult<User>>('/api/admin/users', {
         params: { keyword: query.keyword || undefined, page: query.page - 1, size: query.size },
       }),
       http.get<Role[]>('/api/admin/roles'),
+      http.get<OrganizationOption[]>('/api/admin/users/options/organizations'),
+      http.get<PostOption[]>('/api/admin/users/options/posts'),
     ])
     if (usersResult.status === 'fulfilled') {
       users.value = usersResult.value.data.content
@@ -99,6 +123,18 @@ async function load() {
     } else {
       roles.value = []
       ElMessage.error(format('user.loadRolesFailed', { message: errorMessage(rolesResult.reason) }))
+    }
+    if (organizationsResult.status === 'fulfilled') {
+      organizations.value = organizationsResult.value.data
+    } else {
+      organizations.value = []
+      ElMessage.error(errorMessage(organizationsResult.reason))
+    }
+    if (postsResult.status === 'fulfilled') {
+      posts.value = postsResult.value.data
+    } else {
+      posts.value = []
+      ElMessage.error(errorMessage(postsResult.reason))
     }
   } catch (error) {
     ElMessage.error(errorMessage(error))
@@ -115,6 +151,8 @@ function resetForm() {
     displayName: '',
     password: '',
     enabled: true,
+    organizationId: undefined,
+    postId: undefined,
     roleIds: [],
   })
   formRef.value?.clearValidate()
@@ -122,6 +160,8 @@ function resetForm() {
 
 function createUser() {
   resetForm()
+  form.organizationId = organizations.value[0]?.id
+  form.postId = posts.value[0]?.id
   dialogVisible.value = true
 }
 
@@ -133,6 +173,8 @@ function editUser(user: User) {
     displayName: user.displayName,
     password: '',
     enabled: user.enabled,
+    organizationId: user.organizationId ?? undefined,
+    postId: user.postId ?? undefined,
     roleIds: roles.value.filter((role) => user.roles.includes(role.code)).map((role) => role.id),
   })
   dialogVisible.value = true
@@ -216,7 +258,13 @@ onMounted(load)
       <el-table-column prop="username" :label="t('user.username')" width="145" />
       <el-table-column prop="displayName" :label="t('user.displayName')" width="145" />
       <el-table-column prop="email" :label="t('user.email')" min-width="220" />
-      <el-table-column :label="t('user.roles')" min-width="250">
+      <el-table-column :label="t('user.organization')" min-width="150">
+        <template #default="{ row }">{{ row.organizationName || t('common.noData') }}</template>
+      </el-table-column>
+      <el-table-column :label="t('user.post')" min-width="130">
+        <template #default="{ row }">{{ row.postName || t('common.noData') }}</template>
+      </el-table-column>
+      <el-table-column :label="t('user.roles')" min-width="220">
         <template #default="{ row }">
           <el-tag v-for="role in row.roles" :key="role" class="role-tag" effect="plain">{{ role }}</el-tag>
         </template>
@@ -272,6 +320,28 @@ onMounted(load)
           </el-form-item>
           <el-form-item :label="editingId ? t('user.resetPassword') : t('user.password')" prop="password">
             <el-input v-model="form.password" type="password" show-password autocomplete="new-password" />
+          </el-form-item>
+        </div>
+        <div class="form-grid">
+          <el-form-item :label="t('user.organization')" prop="organizationId">
+            <el-select v-model="form.organizationId" clearable filterable class="full-width">
+              <el-option
+                v-for="organization in organizations"
+                :key="organization.id"
+                :label="`${organization.name} (${organization.code})`"
+                :value="organization.id"
+              />
+            </el-select>
+          </el-form-item>
+          <el-form-item :label="t('user.post')" prop="postId">
+            <el-select v-model="form.postId" clearable filterable class="full-width">
+              <el-option
+                v-for="post in posts"
+                :key="post.id"
+                :label="`${post.name} (${post.code})`"
+                :value="post.id"
+              />
+            </el-select>
           </el-form-item>
         </div>
         <el-form-item :label="t('user.roles')" prop="roleIds">

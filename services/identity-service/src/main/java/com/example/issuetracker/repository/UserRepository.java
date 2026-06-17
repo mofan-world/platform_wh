@@ -22,10 +22,10 @@ public interface UserRepository extends JpaRepository<User, Long> {
 
     boolean existsByEmailIgnoreCaseAndIdNot(String email, Long id);
 
-    @EntityGraph(attributePaths = {"roles", "roles.permissions"})
+    @EntityGraph(attributePaths = {"roles", "roles.permissions", "organization", "post"})
     Optional<User> findByUsernameIgnoreCaseAndDeletedFalse(String username);
 
-    @EntityGraph(attributePaths = {"roles", "roles.permissions"})
+    @EntityGraph(attributePaths = {"roles", "roles.permissions", "organization", "post"})
     @Query("select u from User u where u.id = :id and u.deleted = false")
     Optional<User> findWithRolesById(@Param("id") Long id);
 

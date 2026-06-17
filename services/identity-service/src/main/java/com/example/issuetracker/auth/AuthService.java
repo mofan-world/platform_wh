@@ -6,8 +6,12 @@ import com.example.issuetracker.auth.AuthDtos.RegisterRequest;
 import com.example.issuetracker.auth.AuthDtos.TokenResponse;
 import com.example.issuetracker.auth.AuthDtos.UserProfile;
 import com.example.issuetracker.common.BusinessException;
+import com.example.issuetracker.domain.Organization;
+import com.example.issuetracker.domain.Post;
 import com.example.issuetracker.domain.Role;
 import com.example.issuetracker.domain.User;
+import com.example.issuetracker.repository.OrganizationRepository;
+import com.example.issuetracker.repository.PostRepository;
 import com.example.issuetracker.repository.RoleRepository;
 import com.example.issuetracker.repository.UserRepository;
 import com.example.issuetracker.security.CurrentUser;
@@ -31,6 +35,8 @@ public class AuthService {
 
     private final UserRepository userRepository;
     private final RoleRepository roleRepository;
+    private final OrganizationRepository organizationRepository;
+    private final PostRepository postRepository;
     private final PasswordEncoder passwordEncoder;
     private final AuthenticationManager authenticationManager;
     private final JwtService jwtService;
@@ -56,6 +62,8 @@ public class AuthService {
         user.setPasswordHash(passwordEncoder.encode(request.password()));
         user.setDisplayName(request.displayName().trim());
         user.setEnabled(true);
+        user.setOrganization(defaultOrganization());
+        user.setPost(defaultPost());
         user.getRoles().add(defaultRole);
         userRepository.save(user);
         defaultProjectMembershipService.addToDefaultProject(user);
@@ -111,14 +119,28 @@ public class AuthService {
     }
 
     private UserProfile toProfile(User user) {
+        Organization organization = user.getOrganization();
+        Post post = user.getPost();
         return new UserProfile(
                 user.getId(),
                 user.getUsername(),
                 user.getEmail(),
                 user.getDisplayName(),
+                organization == null ? null : organization.getId(),
+                organization == null ? null : organization.getName(),
+                post == null ? null : post.getId(),
+                post == null ? null : post.getName(),
                 user.getRoles().stream().map(Role::getCode).sorted().toList(),
                 PermissionClaims.permissionsFor(user)
         );
+    }
+
+    private Organization defaultOrganization() {
+        return organizationRepository.findByCodeIgnoreCase("ROOT").orElse(null);
+    }
+
+    private Post defaultPost() {
+        return postRepository.findByCodeIgnoreCase("USER").orElse(null);
     }
 }
 

@@ -43,6 +43,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
@@ -449,11 +450,14 @@ public class IdentityManagementService {
     }
 
     private Set<Permission> requirePermissions(Set<Long> permissionIds) {
+        if (permissionIds == null || permissionIds.isEmpty()) {
+            return new HashSet<>();
+        }
         List<Permission> permissions = permissionRepository.findAllById(permissionIds);
         if (permissions.size() != permissionIds.size()) {
             throw BusinessException.badRequest("INVALID_PERMISSION", "包含不存在的权限");
         }
-        return Set.copyOf(permissions);
+        return new HashSet<>(permissions);
     }
 
     private Organization requireOrganization(Long id) {

@@ -3,6 +3,10 @@ export interface UserProfile {
   username: string
   email: string
   displayName: string
+  organizationId?: number | null
+  organizationName?: string | null
+  postId?: number | null
+  postName?: string | null
   roles: string[]
   permissions: string[]
 }

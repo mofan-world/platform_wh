@@ -26,6 +26,10 @@ function deserializeProfile(raw: string): UserProfile | null {
     username: profile.username,
     email: profile.email,
     displayName: profile.displayName,
+    organizationId: typeof profile.organizationId === 'number' ? profile.organizationId : null,
+    organizationName: typeof profile.organizationName === 'string' ? profile.organizationName : null,
+    postId: typeof profile.postId === 'number' ? profile.postId : null,
+    postName: typeof profile.postName === 'string' ? profile.postName : null,
     roles: profile.roles,
     permissions: profile.permissions,
   }
